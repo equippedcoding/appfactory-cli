@@ -1,0 +1,40 @@
+{
+	"name": "@equippedcoding/appfactory",
+	"version": "0.0.1",
+	"main": "index.js",
+	"license": "ISC",
+	"bin": {
+		"appfactory": "bin/appfactory.js"
+	},
+	"engines": {
+		"node": ">=8"
+	},
+	"description": "A javascript library to build web apps.",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/equippedcoding/appfactoryjs.git"
+	},
+	"keywords": [
+		"app",
+		"factory",
+		"js"
+	],
+	"author": "Joseph Mitchell",
+	"bugs": {
+		"url": "https://github.com/equippedcoding/appfactoryjs/issues"
+	},
+	"homepage": "https://github.com/equippedcoding/appfactoryjs#readme",
+	"devDependencies": {},
+	"dependencies": {
+		"adm-zip": "^0.4.11",
+		"axios": "^0.18.0",
+		"exec": "^0.2.1",
+		"fs-extra": "^7.0.0",
+		"github-download": "^0.5.0",
+		"minimist": "^1.2.0",
+		"ncp": "^2.0.0",
+		"ora": "^3.0.0",
+		"randomstring": "^1.1.5",
+		"superagent": "^4.0.0-beta.5"
+	}
+}
