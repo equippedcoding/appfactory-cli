@@ -39,6 +39,9 @@ module.exports = () => {
 		case 'add':
 			require('./cmds/add')(args);
 			break;
+		case 'build':
+			require('./cmds/build')(args);
+			break;
 		default:
 			error(`"${cmd}" is not a valid command!`, true);
 			break;

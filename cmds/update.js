@@ -4,11 +4,10 @@ const ghdownload = require('github-download');
 const exec = require('exec');
 const request = require('superagent');
 const ncp = require('ncp').ncp;
-const admZip = require('adm-zip');
+const admZip = require('adm-zip'); 
 
  
 module.exports = async (args) => {
-
 
 	var currentDir = process.cwd()+"/.it";
 	var isInRootDir = fs.pathExistsSync(currentDir);

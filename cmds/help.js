@@ -4,6 +4,7 @@ appfactory [command] <options>
 
 create ......... Creates a new Appfactory app
 	--dir, -d ......... Name of the app directory
+	--title, -t ......... Title of app
 version ......... Show package version
 help ......... Show help menu for a command
 update ......... Update appfactoryJS
@@ -12,12 +13,15 @@ add ......... Add new component default is a js component
 composer ......... A wrapper for the php composer program.
 	--dir, -d ......... Name of directory, if this option is not provided then a random name is given so you might want to specify this param
 	--command, -c ......... !Requred - The php composer command
+build ......... Build script files
+	--reverse, -r ......... Reverse the build
 	`,
 
 	create: `
 appfactory create <options>
 
 --dir, -d ......... Name of the app directory
+--title, -t ......... Title of app
 	`,
 
 	update: `Update AppfactoryJS app`,
