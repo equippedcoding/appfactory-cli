@@ -13,7 +13,6 @@ module.exports = (args) => {
 
 	var file = `${process.cwd()}/.it`;
 	var exists = fse.pathExistsSync(file);
-	console.log(process.cwd());
 
 	// appfactory composer --dir media --command "require php-ffmpeg/php-ffmpeg"
 	var composer = `php ${process.cwd()}/php/bin/composer.phar`;

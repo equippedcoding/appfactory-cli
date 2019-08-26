@@ -18,8 +18,12 @@ module.exports = () => {
 		cmd = "help";
 	}
 
-
 	switch(cmd){
+
+
+		case 'dev':
+			require('./cmds/dev')(args);
+			break;
 
 		case 'create':
 			require('./cmds/create')(args);
@@ -29,6 +33,12 @@ module.exports = () => {
 			break;
 		case 'version':
 			require('./cmds/version')(args);
+			break;
+		case 'login':
+			require('./cmds/login')(args);
+			break;
+		case 'register':
+			require('./cmds/register')(args);
 			break;
 		case 'composer':
 			require('./cmds/composer')(args);
@@ -41,6 +51,15 @@ module.exports = () => {
 			break;
 		case 'build':
 			require('./cmds/build')(args);
+			break;
+		case 'plugin':
+			require('./cmds/plugin')(args);
+			break;
+		case 'css':
+			require('./cmds/css')(args);
+			break;
+		case 'utils':
+			require('./cmds/utils')(args);
 			break;
 		default:
 			error(`"${cmd}" is not a valid command!`, true);
