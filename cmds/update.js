@@ -40,6 +40,7 @@ module.exports = async (args) => {
 	    zip.extractAllTo(dirName, process.cwd(), true);
         fs.moveSync(dirName+"/"+dirName+"/appfactory.js", process.cwd()+"/js/libs/appfactoryjs/appfactory.js", { overwrite: true });
         fs.moveSync(dirName+"/"+dirName+"/appfactory.css", process.cwd()+"/js/libs/appfactoryjs/appfactory.css", { overwrite: true });
+        fs.moveSync(dirName+"/"+dirName+"/appfactorystarter.js", process.cwd()+"/js/libs/appfactoryjs/appfactorystarter.js", { overwrite: true });
         fs.removeSync(dirName);
         spinner.stop();
 	      

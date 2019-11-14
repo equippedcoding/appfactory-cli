@@ -24,13 +24,12 @@ if(args.plugin!=undefined){
 
 
 
-
 function createNewPluginTemplate(){
 
   var currentDir = process.cwd()+"/.it";
   var isInRootDir = fs2.pathExistsSync(currentDir);
   if(!isInRootDir){
-    Console.log("Please run command from application root directory");
+    console.log("Please run command from application root directory");
     return false;
   }
 
@@ -48,7 +47,6 @@ function createNewPluginTemplate(){
 
         var dir_id = "";
         const questions = [
-
             {
                 type: 'text',
                 name: 'name',
@@ -67,6 +65,25 @@ function createNewPluginTemplate(){
             },
             {
                 type: 'text',
+                name: 'id',
+                message: function(prev, values){
+                  return `Enter Plugin ID - if you want directory name the same add -y flag`;
+                },
+                validate: function(value){
+                  var newvalue = value.split(" -y")[0];
+                  //console.log("|"+newvalue+"|");
+                  if(value==""){
+                    return "Plugin id is required";
+                  }else
+                  if(generalSupport.checkIfValid(newvalue,["_","-"])==false){
+                    return "Plugin id is not valid";
+                  }else{
+                    return true;
+                  }
+                }
+            },
+            {
+                type: prev => testPrevAnswer(prev) ? 'text' : null,
                 name: 'directory',
                 message: function(prev, values){
                   return `Enter Plugin Directory Name: (required)`;
@@ -108,9 +125,27 @@ function createNewPluginTemplate(){
 
         const answers = await prompt(questions, {onCancel:cleanup, onSubmit:cleanup});
 
+        answers.id = answers.id.split(" -y")[0];
+        if(answers.directory==undefined){
+          answers.directory = answers.id;
+        }
+
         console.log(answers);
 
         createNewPluginTemplate11(answers);
+
+
+        function testPrevAnswer(prev){
+          var t1 = prev.split();
+          var isdirectoryToo = false;
+          for (var i = 0; i < t1.length; i++) {
+            if(t1[i] == "-y"){
+              isdirectoryToo = true;
+              break;
+            }
+          }
+          return isdirectoryToo;
+        }
 
     })();
 
@@ -314,16 +349,108 @@ function createNewPluginTemplate11(answers){
 
   // appfactory add -admin -plugin "" -name "componentName" -type "js"
 
-  var createNewPlugin = answers.name;
+  var createNewPluginName = answers.name;
   var createNewPluginDir = answers.directory;
+  var createNewPluginId = answers.id;
   /*
   var createNewPluginWithId = answers.id;
   var createNewPluginWithURL = answers.url;
   var createNewPluginInit = answers.init;
+
+
+      "default":{
+          "name": "Default",
+          "directory":"default",
+          "start":"init"
+          "admin-active":true,
+          "client-active":true
+      }
   */
 
-  var appfacConfig = fs2.readFileSync(process.cwd()+"/config.appfac.js");
+  var appfacConfigFile = process.cwd()+"/config.appfac.js";
+  var appfacConfig = fs2.readFileSync(appfacConfigFile);
   appfacConfig = JSON.parse(appfacConfig);
+
+  var plugins = appfacConfig.application.plugins;
+  var doesPluginExist = false;
+  for (var property in plugins) {
+    if (property == createNewPluginId) {
+      doesPluginExist = true;
+      break;
+    }
+  }
+  if(doesPluginExist){
+    console.log("Plugin id already exist: "+createNewPluginId+" - Plugin was Not Created");
+    return;
+  }
+
+  var allplugins = process.cwd()+"/js/plugins/";
+
+  fs.readdir(allplugins, function (err, files) {
+    if (err) {
+      console.error("Could not list the directory.", err);
+      process.exit(1);
+    } 
+
+    for (var i = 0; i < files.length; i++) {
+      if(createNewPluginDir == files[i]){
+        console.log("Plugin directory already exist: "+createNewPluginDir+" - Plugin was Not Created");
+        return;
+      }
+    }
+
+    appfacConfig.application.plugins[createNewPluginId] = {
+        "name": createNewPluginName,
+        "directory": createNewPluginDir,
+        "start":"init",
+        "admin-active":true,
+        "client-active":true
+    };
+
+    generalSupport.writeToFile(appfacConfigFile, JSON.stringify(appfacConfig, null, 4));
+
+    // plugin directory
+    var plugin_admin = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin";
+    fs2.ensureDirSync(plugin_admin);
+
+    var plugin_admin_classes = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin/classes";
+    fs2.ensureDirSync(plugin_admin_classes);
+
+    var plugin_admin_theme = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin/themes";
+    fs2.ensureDirSync(plugin_admin_theme);
+
+    var plugin_client = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client";
+    fs2.ensureDirSync(plugin_client);
+
+    var plugin_client_classes = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client/classes";
+    fs2.ensureDirSync(plugin_client_classes);
+
+    var plugin_client_theme = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client/themes";
+    fs2.ensureDirSync(plugin_client_theme);
+
+    var jsonPluginConfig = pluginInit.createTemplatePluginConfig(createNewPluginName,createNewPluginId,createNewPluginDir);
+    
+
+    var jsonPluginConfigString = jsonPluginConfig;
+    var filename = process.cwd()+"/js/plugins/"+createNewPluginDir+"/plugin.config.json";
+    generalSupport.writeToFile(filename, jsonPluginConfigString);
+
+    pluginInit.constructThemeDirectory(createNewPluginName,createNewPluginDir,"default");
+
+  });
+
+
+  return;
+
+
+
+
+
+
+
+
+
+
 
 
   var mainJsonConfigFile = process.cwd()+"/js/plugins/plugin.config.json";
@@ -458,7 +585,10 @@ function createNewPluginTemplate11(answers){
     "client": [
         {
             "directory": "default",
-            "start": "theme_interface"
+            "start": "theme_interface",
+            "head": [
+                "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/default/client/themes/default/styles/css/styles.css\">"
+            ]
         }
     ]
 
@@ -480,7 +610,6 @@ function createNewPluginTemplate11(answers){
   pluginInit.constructThemeDirectory(pluginThemeFile,createNewPluginDir,"default","theme_interface.js",jsonPluginConfig,"admin");
   pluginInit.constructThemeDirectory(pluginThemeFile,createNewPluginDir,"default","theme_interface.js",jsonPluginConfig,"client");
     
-
 
   var topLevelConfigFile = process.cwd()+"/config.appfac.js";
   var topLevelConfigFileContents = fs.readFileSync( topLevelConfigFile );

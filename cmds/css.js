@@ -99,8 +99,10 @@ function watchSassFiles(){
 						if(filename.includes(".scss")){
 							filename = filename.split(".scss")[0];
 						}
-						var css_filename = process.cwd()+"/js/plugins/"+plugin+"/"+path+"/themes/"+theme+"/styles/css/"+filename+".css";
-						
+						//var css_filename = process.cwd()+"/js/plugins/"+plugin+"/"+path+"/themes/"+theme+"/styles/css/"+filename+".css";
+						var css_filename = process.cwd()+"/js/plugins/"+plugin+"/"+path+"/themes/"+theme+"/styles/css/sass_styles.css";
+
+
 						var doesExist2 = fs.pathExistsSync(css_filename);
 						if(doesExist2){
 							//console.log("watching: "+watchFile);
@@ -165,19 +167,43 @@ function convertSassToCss(){
 		var globalPluginConfig = JSON.parse(globalContent);
 
 
-		var sassArray = globalPluginConfig.sass;
+		console.log(typeof args.m);
 
+		var themeSpecific = "";
+		if(typeof args.m === "boolean"){
+			_processsasfile(false);			
+		}else{
+			var a = args.m;
+			_processsasfile(false,a);
+		}
+
+		function _processsasfile(processAll,_plugin){
+			var sassArray = globalPluginConfig.sass;
+			for (var i = 0; i < sassArray.length; i++) {
+				var client = sassArray[i].client;
+				var theme = sassArray[i].theme;
+				var plugin = sassArray[i].plugin;
+				var filename = sassArray[i].file;
+
+				if(processAll){
+					processSASSFiles(client,theme,plugin,filename);
+				}else{
+					if(_plugin==plugin){
+						processSASSFiles(client,theme,plugin,filename);
+					}
+				}
+			}
+		}
+		
+
+
+		
+		/*
 		for (var i = 0; i < sassArray.length; i++) {
-
 			var client = sassArray[i].client;
 			var theme = sassArray[i].theme;
 			var plugin = sassArray[i].plugin;
 			var filename = sassArray[i].file;
-
-			//if(client==undefined || theme==undefined || plugin==undefined || filename==undefined){
-			//	console.log(i)
-			//	continue;
-			//}
 
 
 			if(filename.includes(".scss")){
@@ -188,56 +214,44 @@ function convertSassToCss(){
 			var css_filename;
 			if(client==undefined || client==true){
 				scss_filename = process.cwd()+"/js/plugins/"+plugin+"/client/themes/"+theme+"/styles/sass/"+filename+".scss";
-				css_filename = process.cwd()+"/js/plugins/"+plugin+"/client/themes/"+theme+"/styles/css/"+filename+".css";
+				css_filename = process.cwd()+"/js/plugins/"+plugin+"/client/themes/"+theme+"/styles/css/sass_styles.css";
 			}else{
 				scss_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/sass/"+filename+".scss";
-				css_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/css/"+filename+".css";
+				css_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/css/sass_styles.css";
 			}
-
 
 			if(fs.pathExistsSync(scss_filename)){
 				processFiles(plugin,theme,scss_filename,css_filename);
 			}
 
-			
-
-
-
-			// var doesExist2 = fs.pathExistsSync(scss_filename);
-			// if(doesExist2){
-
-			// 	var result = sass.renderSync({file: scss_filename});
-
-			// 	var css_filename;
-			// 	if(args.a==undefined){
-			// 		css_filename = process.cwd()+"/js/plugins/"+plugin+"/client/themes/"+theme+"/styles/css/"+filename+".css";
-			// 	}else{
-			// 		css_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/css/"+filename+".css";
-			// 	}
-
-			// 	var doesExist = fs.pathExistsSync(css_filename);
-			// 	if(doesExist){
-			// 		console.log(css_filename)
-			// 		fs.writeFile(css_filename, result.css, function(err){
-			// 			if(!err){
-			// 			  //file written on disk
-			// 			}
-			// 		});
-
-			// 	}else{
-			// 		console.log(css_filename)
-			// 	}
-
-			// }
-
-
-
 		}// end of loop
-
+		*/
 
 		console.log("Done");
 
 	});
+
+	function processSASSFiles(client,theme,plugin,filename){
+
+		if(filename.includes(".scss")){
+			filename = filename.split(".scss")[0];
+		}
+
+		var scss_filename;
+		var css_filename;
+		if(client==undefined || client==true){
+			scss_filename = process.cwd()+"/js/plugins/"+plugin+"/client/themes/"+theme+"/styles/sass/"+filename+".scss";
+			css_filename = process.cwd()+"/js/plugins/"+plugin+"/client/themes/"+theme+"/styles/css/sass_styles.css";
+		}else{
+			scss_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/sass/"+filename+".scss";
+			css_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/css/sass_styles.css";
+		}
+
+		if(fs.pathExistsSync(scss_filename)){
+			processFiles(plugin,theme,scss_filename,css_filename);
+		}
+
+	}
 
 
 }
@@ -264,7 +278,6 @@ function processFiles(plugin,theme,sassFile,cssFile){
 	// }else{
 	// 	css_filename = process.cwd()+"/js/plugins/"+plugin+"/admin/themes/"+theme+"/styles/css/"+filename+".css";
 	// }
-
 
 	fs.writeFile(css_filename, result.css, function(err){
 		if(!err){

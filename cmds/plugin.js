@@ -11,7 +11,7 @@ const appUtils = require('../utils/app.js');
 
 var formidable = require('formidable');
 
-const prompt = require('prompts');
+const prompts = require('prompts');
 
 var request = require('request');
 var path = require('path');
@@ -71,6 +71,22 @@ if(args.sass!=undefined){
 	createThemeHTMLHeadTagSASS();
 }
 
+// appfactory plugin --css "plugin_directory plugin_theme file_name" -a
+if(args.css!=undefined){
+	createThemeHTMLHeadTagCSS();
+}
+
+
+// appfactory plugin --remove plugin
+if(args.remove!=undefined){
+	removePlugin();
+}
+
+// appfactory plugin --restore plugin
+if(args.restore!=undefined){
+	restorePlugin();
+}
+
 
 /* no login */
 
@@ -98,6 +114,270 @@ if(args.update!=undefined){
 }
 
 
+
+
+
+function removePlugin(){
+	if(!isExecutedFromRoot()){
+		Console.log("Please run command from application root directory");
+		return false;
+	}
+
+
+	var pluginToRemove = args.remove;
+
+	var globalPluginsConfigFile = process.cwd()+"/config.appfac.js";
+	generalSupport.readFile(globalPluginsConfigFile,function(globalContent){
+		var mainConfig = JSON.parse(globalContent);
+
+		var plugins = mainConfig['application']['plugins'];
+
+		var plugin = null;
+		var pluginName = "";
+
+		for(p in plugins){
+			if(p==pluginToRemove){
+				plugin = plugins[p];
+				pluginName = p;
+				break;
+			}
+		}
+
+		if(plugin==null){
+			console.log("plugin does not exist");
+			return;
+		}
+
+
+ 
+		(async () => {
+			const response = await prompts([
+			{
+			  type: 'confirm',
+			  name: 'value',
+			  message: 'Confirm?',
+			  initial: true
+			}
+			]);
+
+			//console.log(response);
+
+			if(response.value){
+
+				delete mainConfig['application']['plugins'][pluginName];
+
+				var dstpath = __dirname+"/tmp/"+pluginName;
+				var srcpath = process.cwd()+"/js/plugins/"+pluginName;
+
+				fs.move(srcpath, dstpath, { overwrite: true }, err => {
+				  if (err) return console.error(err);
+
+					console.log("Plugin "+pluginName+" deleted");
+
+					generalSupport.writeToFile(globalPluginsConfigFile,JSON.stringify(mainConfig,null,4));
+				});
+
+
+				// fs.remove(plugindir,function(){
+
+				// 	console.log("Plugin "+pluginName+" deleted");
+
+				// 	generalSupport.writeToFile(globalPluginsConfigFile,JSON.stringify(mainConfig,null,4));
+				// });
+
+
+			}
+
+	  	})();
+	});
+
+}
+
+function restorePlugin(){
+
+	if(!isExecutedFromRoot()){
+		Console.log("Please run command from application root directory");
+		return false;
+	}
+
+
+	var pluginToRestore = args.restore;
+
+	var tmpDir = __dirname+"/tmp/";
+	fs.readdir(tmpDir, function (err, files) {
+		if (err) {
+		process.exit(1);
+		}
+
+		var isMatch = false;
+		for (var i = 0; i < files.length; i++) {
+			if(files[i]==pluginToRestore){
+				isMatch = true;
+				break;
+			}
+		}
+
+		if(isMatch==false){
+			console.log("Plugin "+pluginToRestore+" not found");
+		}else{
+			var dstpath = process.cwd()+"/js/plugins/"+pluginToRestore;
+			var srcpath = __dirname+"/tmp/"+pluginToRestore;
+
+			var plugindir = process.cwd()+"/js/plugins";
+
+			fs.readdir(plugindir,function(files){
+				var alreadyExist = false;
+				for (var i = 0; i < files.length; i++) {
+					if(files[i]==pluginToRestore){
+						alreadyExist = true;
+						break;
+					}
+				}
+				if(alreadyExist==false){
+					opperate();
+				}else{
+					(async () => {
+						const response = await prompts([
+						{
+						  type: 'confirm',
+						  name: 'value',
+						  message: 'Plugin directory already exist. Do you want to over write?',
+						  initial: true
+						}
+						]);
+
+						if(response.value){
+							opperate();
+						}
+
+					})();
+				}
+			});
+
+			function opperate(){
+			
+				fs.move(srcpath, dstpath, { overwrite: true }, err => {
+				  	if (err) return console.error(err);
+
+
+					var tmpDir = __dirname+"/tmp/deleted_plugins.json";
+				  	generalSupport.readFile(tmpDir,function(contents){
+				  		var tmpObj = JSON.parse(contents);
+				  		var pluginFound = false;
+				  		for (var o in tmpObj) {
+				  			if(o==pluginToRestore){
+				  				pluginFound = true;
+				  				break;
+				  			}
+				  		}
+
+				  		if(pluginFound){
+				  			var configfile = process.cwd()+"/config.appfac.js";
+
+
+
+
+				  			generalSupport.readFile(configfile,function(contents2){
+				  				var mainpluginconfig = JSON.parse(contents2);
+
+				  				mainpluginconfig['application']['plugins'][pluginToRestore] = tmpObj[pluginToRestore];
+
+				  				generalSupport.writeToFile(configfile,JSON.stringify(mainpluginconfig,null,4));
+
+				  				delete tmpObj[pluginToRestore];
+				  				generalSupport.writeToFile(tmpDir,JSON.stringify(tmpObj,null,4));
+
+				  				console.log("Plugin: "+pluginToRestore+" restored");
+
+				  			});
+				  		}
+				  	});
+
+				});
+			}
+		}
+	});
+
+
+
+}
+
+
+
+
+
+function createThemeHTMLHeadTagCSS(){
+	if(!isExecutedFromRoot()){
+		Console.log("Please run command from application root directory");
+		return false;
+	}
+
+	var stuff = null;
+	if(args.css.includes("|")){
+		stuff = args.css.split("|");
+	}else if(args.css.includes(" ")){
+		stuff = args.css.split(" ");
+	}
+	if(stuff.length<3){
+		console.log("Please specify plugin_name plugin_theme sass_file");
+		return;
+	}
+
+	var pluginDir = stuff[0];
+	var theme = stuff[1];
+ 	var css_file = stuff[2];
+
+ 	if(!css_file.endsWith(".css")){
+ 		css_file = css_file+".css";
+ 	}
+
+
+	var globalPluginsConfigFile = process.cwd()+"/js/plugins/plugin.config.json";
+	generalSupport.readFile(globalPluginsConfigFile,function(globalContent){
+
+		var globalPluginConfig = JSON.parse(globalContent);
+
+		var pluginThemeFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
+		generalSupport.readFile(pluginThemeFile,function(content){
+			var config = JSON.parse(content);
+
+			var css;
+			if(args.a==undefined){
+				css = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/"+css_file;
+			}else{
+				css = process.cwd()+"/js/plugins/"+pluginDir+"/admin/themes/"+theme+"/styles/css/"+css_file;
+			}
+
+			var cssDir = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/";
+			var doesAdminExist = fs.pathExistsSync(cssDir);
+			if(!doesAdminExist){
+				fs.ensureDirSync(cssDir);
+			}
+
+			generalSupport.writeToFile(css,"");
+
+    		var clientConfig = config.client;
+
+    		for (var i = 0; i < clientConfig.length; i++) {
+    			if(clientConfig[i].directory==theme){
+    				var csspath = "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/"+css_file+"\">"
+             		if(clientConfig[i].head==undefined || clientConfig[i].head==null){
+             			clientConfig[i].head = [];
+             		}
+         			clientConfig[i].head.push(csspath);
+         			break;
+    			}
+    		}
+    		config.client = clientConfig;				
+
+			var globalConfigString = JSON.stringify(config, null, 4);
+			generalSupport.writeToFile(pluginThemeFile,globalConfigString);
+
+		});
+	});
+} // end of createThemeHTMLHeadTagCSS
+
+
 function createThemeHTMLHeadTagSASS(){
 	if(!isExecutedFromRoot()){
 		Console.log("Please run command from application root directory");
@@ -114,97 +394,174 @@ function createThemeHTMLHeadTagSASS(){
 		stuff = args.sass.split(" ");
 	}
 	if(stuff.length<3){
-		console.log("Please specify plugin_name|plugin_theme|sass_file");
+		console.log("Please specify plugin_name plugin_theme sass_file");
 		return;
 	}
 
 	var pluginDir = stuff[0];
 	var theme = stuff[1];
  	var sass_file = stuff[2];
- 	var htmlTag;
- 	if(sass_file.includes(".scss")){
- 		htmlTag = "styles/css/"+sass_file.split(".scss")[0]+".css";
- 	}else{
- 		htmlTag = "styles/css/"+sass_file+".css";
+
+ 	var sass_files = sass_file.split(",");
+ 	for(var i=0; i < sass_files.length; i++){
+
+ 		var parentFolder = "";
+ 		var files = "";
+ 		if(sass_files[i].includes('#')){
+	 		var filesfolders = sass_files[i].split('#');
+	 		parentFolder = filesfolders[0];
+	 		files = filesfolders[1].split(" ");
+ 		}else{
+ 			files = sass_files[i].split(" ");
+ 		}
+
+ 		// parent#sub1/comp1 sub2/comp2 sub3/comp3,
+	 	for(var i=0; i < sass_files.length; i++){
+
+	 		var parentFolder = "";
+	 		var files = "";
+	 		if(sass_files[i].includes('#')){
+		 		var filesfolders = sass_files[i].split('#');
+		 		parentFolder = filesfolders[0];
+		 		files = filesfolders[1].split("+");
+	 		}else{
+	 			files = sass_files[i].split("+");
+	 		}
+
+	 		//console.log(files);
+
+	 		for(var m=0; m < files.length; m++){
+	 			var filepath = "";
+	 			if(parentFolder!=""){
+	 				filepath = parentFolder + "/";
+	 			}
+
+	 			filepath += files[m];
+
+	 			_create_sass_file(filepath);
+
+	 		}
+
+	 	}
+
  	}
- 	// if(stuff.length<3){
- 	// 	type = stuff[3];
- 	// }
-
-	// check if plugin and theme exist
-
-	var globalPluginsConfigFile = process.cwd()+"/js/plugins/plugin.config.json";
-	generalSupport.readFile(globalPluginsConfigFile,function(globalContent){
-		var globalPluginConfig = JSON.parse(globalContent);
 
 
-		var pluginThemeFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
-		generalSupport.readFile(pluginThemeFile,function(content){
-			var config = JSON.parse(content);
+ 	function _create_sass_file(sass_file){
+		var htmlTag;
+	 	if(sass_file.includes(".scss")){
+	 		htmlTag = "styles/css/"+sass_file.split(".scss")[0]+".css";
+	 	}else{
+	 		htmlTag = "styles/css/"+sass_file+".css";
+	 	}
+	 	// if(stuff.length<3){
+	 	// 	type = stuff[3];
+	 	// }
 
-			if(config.sass==undefined){
-				config.sass = {};
-				config.sass.file = [];
-			}
+		// check if plugin and theme exist
 
+		var globalPluginsConfigFile = process.cwd()+"/js/plugins/plugin.config.json";
+		generalSupport.readFile(globalPluginsConfigFile,function(globalContent){
 
-			if(!sass_file.includes(".scss")){
-				sass_file = sass_file+".scss";
-			}
-			config.sass.file.push(sass_file);
-
-			var scss;
-			if(args.a==undefined){
-				scss = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/sass/"+sass_file;
-			}else{
-				scss = process.cwd()+"/js/plugins/"+pluginDir+"/admin/themes/"+theme+"/styles/sass/"+sass_file;
-			}
+			var globalPluginConfig = JSON.parse(globalContent);
 
 
-			var configString = JSON.stringify(config, null, 4);
-			generalSupport.writeToFile(pluginThemeFile,configString);
-			
-			fs.ensureFile(scss, err => {
-			  if(err) console.log(err) // => null
-			  console.log("created");
+			var pluginThemeFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
+			generalSupport.readFile(pluginThemeFile,function(content){
+				var config = JSON.parse(content);
+
+				if(config.sass==undefined){
+					config.sass = {};
+					config.sass.file = [];
+				}
+
+
+				if(!sass_file.includes(".scss")){
+					sass_file = sass_file+".scss";
+				}
+				config.sass.file.push(sass_file);
+
+				var scss;
+				var css;
+				if(args.a==undefined){
+					scss = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/sass/"+sass_file;
+					css = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/sass_styles.css";
+				}else{
+					scss = process.cwd()+"/js/plugins/"+pluginDir+"/admin/themes/"+theme+"/styles/sass/"+sass_file;
+					css = process.cwd()+"/js/plugins/"+pluginDir+"/admin/themes/"+theme+"/styles/css/sass_styles.css";
+				}
+
+
+		        if(globalPluginConfig.sass==undefined){
+		        	globalPluginConfig.sass = [];
+		        }
+
+		        var does_exist = false;
+		        for (var i = globalPluginConfig.sass.length - 1; i >= 0; i--) {
+
+		        	var _plugin = globalPluginConfig.sass[i].plugin;
+		        	var _theme = globalPluginConfig.sass[i].theme;
+		        	var _file = globalPluginConfig.sass[i].file;
+
+		        	if(pluginDir==_plugin && theme==_theme && _file==sass_file){
+		        		does_exist = true;
+		        		break;
+		        	}
+
+		        	//if(globalPluginConfig.sass[i].file==sass_file){}
+		        }
+		        if(does_exist){
+		        	console.log("SASS file: "+sass_file+" already exist!");
+		        	return;
+		        }				
+
+
+				var configString = JSON.stringify(config, null, 4);
+				generalSupport.writeToFile(pluginThemeFile,configString);
+				
+				fs.ensureFile(scss, err => {
+				  if(err) console.log(err) // => null
+				  console.log("created");
+				});
+
+		        // {
+		        //     "directory": "default",
+		        //     "start": "theme_interface",
+		        //     "": [
+		        //     ]
+		        //     "sass": {
+		        //         "watch": true,
+		        //         "files":[
+		        //             "styles.scss"
+		        //         ]
+		        //     }
+		        // }
+
+
+
+		        globalPluginConfig.sass.push({
+		        	file: sass_file,
+		        	plugin: pluginDir,
+		        	theme: theme,
+		        	client: (args.a==undefined) ? true : false
+		        });
+
+				var globalConfigString = JSON.stringify(globalPluginConfig, null, 4);
+				generalSupport.writeToFile(globalPluginsConfigFile,globalConfigString);
+
+
+				createHead2(pluginDir,theme,htmlTag,args.a,"sass", css);
+
 			});
 
-	        // {
-	        //     "directory": "default",
-	        //     "start": "theme_interface",
-	        //     "": [
-	        //     ]
-	        //     "sass": {
-	        //         "watch": true,
-	        //         "files":[
-	        //             "styles.scss"
-	        //         ]
-	        //     }
-	        // }
-
-	        if(globalPluginConfig.sass==undefined){
-	        	globalPluginConfig.sass = [];
-	        }
-
-	        globalPluginConfig.sass.push({
-	        	file: sass_file,
-	        	plugin: pluginDir,
-	        	theme: theme,
-	        	client: (args.a==undefined) ? true : false
-	        });
-
-			var globalConfigString = JSON.stringify(globalPluginConfig, null, 4);
-			generalSupport.writeToFile(globalPluginsConfigFile,globalConfigString);
-
-
-			createHead(pluginDir,theme,htmlTag,args.a,"style");
 
 
 		});
 
 
+ 	}
 
-	});
+ 	
 	
 
 
@@ -224,7 +581,7 @@ function createThemeHTMLHeadTag(){
 		stuff = args.addHeadTagToTheme.split(" ");
 	}
 	if(stuff.length==3){
-		console.log("Please specify plugin_name|plugin_theme|html_tag");
+		console.log("Please specify plugin_name plugin_theme html_tag");
 		return;
 	}
 	var pluginDir = stuff[0];
@@ -234,6 +591,9 @@ function createThemeHTMLHeadTag(){
  	if(stuff.length>3){
  		type = stuff[3];
  	}
+
+ 	//console.log(htmlTag);
+ 	//console.log(type);
 
 	createHead(pluginDir,theme,htmlTag,args.a,type);
 	
@@ -309,69 +669,95 @@ function createHead(pluginDir,theme,htmlTag,client,type){
 	});
 
 }
+function createHead2(pluginDir,theme,htmlTag,client,type,css){
+	var pluginThemeFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
+	generalSupport.readFile(pluginThemeFile,function(content){
+
+		var config = JSON.parse(content);
+
+		if(client==undefined){
+			applyTag("client",config,htmlTag);
+		}else{
+			applyTag("admin",config,htmlTag);
+		}
+
+
+		function applyTag(path,config,html_tag){
+
+			var index = -1;
+			for (var i = 0; i < config.client.length; i++) {
+				var dir = config.client[i].directory;
+				if(dir==theme){
+					index = i;
+					break;
+				}
+			}
+
+			if(index!=-1){
+				var themeConfig = config.client[index];
+				if(themeConfig.head==undefined){
+					themeConfig.head = [];
+				}
+				var tag = "";
+				if(type!=null){
+					html_tag = "css/sass_styles.css";
+					tag = "<link rel=\"stylesheet\" type=\"text/css\" class=\""+pluginDir+"\" href=\"./js/plugins/"+pluginDir+"/"+path+"/themes/"+theme+"/styles/"+html_tag+"\">"
+					
+					// if style then create the css file also
+					var headFileExist = process.cwd()+"/js/plugins/"+pluginDir+"/"+path+"/themes/"+theme+"/"+html_tag;  	
+					fs.ensureFile(css, err => {
+					  if(err) console.log(err) // => null
+					  // file has now been created, including the directory it is to be placed in
+					});
+					
+
+				}else{
+					tag = html_tag;
+				}
+				var doesExist = false;
+				for (var i = themeConfig.head.length - 1; i >= 0; i--) {
+					if(themeConfig.head[i].includes(tag)){
+						doesExist = true;
+					}
+				}
+				if (doesExist==false) 
+					themeConfig.head.push(tag);
+			}else{
+				console.log("Theme does not exist: "+theme);
+				return;
+			}
+			config.client[index] = themeConfig;
+
+			var configString = JSON.stringify(config, null, 4);
+			generalSupport.writeToFile(pluginThemeFile,configString);
+
+		}
+
+
+	});
+
+}
 function changePluginTheme(){
 	if(!isExecutedFromRoot()){
 		Console.log("Please run command from application root directory");
 		return false;
 	}
 
-	var s = [];
+	var themeParams = [];
 	if(args.changeTheme.includes(" ")){
-		s = args.changeTheme.split(" ");
-	}else if(args.changeTheme.includes("|")){
-		s = args.changeTheme.split("|");
+		themeParams = args.changeTheme.split(" ");
+	}else if(args.changeTheme.includes(",")){
+		themeParams = args.changeTheme.split(",");
 	}
 
-	var folder = s[0];
-	var theme = s[1];
+	var plugin = themeParams[0];
+	var theme = themeParams[1];
 
-	if(args.a!=undefined){
+	pluginInit.changeTheme(plugin,theme,true);
 
-		var f = process.cwd()+"/js/plugins/"+folder+"/admin/themes/"+theme;
-		if(!fs.pathExistsSync(f)){
-			console.log("Plugin theme does not exist: "+args.changeTheme);
-			return;
-		}
-
-		var file = process.cwd()+"/plugins/"+folder+"/plugin.config.json";
-		generalSupport.readFile(file,function(content){
-			var config = JSON.parse(content);
-			config.adminTheme = args.changeTheme;
-			var newContent = JSON.stringify(config, null, 4);
-			generalSupport.writeToFile(file,newContent);
-		});
-
-
-	}else{
-
-		var f = process.cwd()+"/js/plugins/"+folder+"/client/themes/"+theme;
-		if(!fs.pathExistsSync(f)){
-			console.log("Plugin theme does not exist: "+args.changeTheme);
-			return;
-		}
-
-
-		var file = process.cwd()+"/config.appfac.js";
-		generalSupport.readFile(file,function(content){
-			var config = JSON.parse(content);
-			if(config.application==undefined){
-				config.application = {};
-			}
-
-			// because windows does not parse | (pipe) correctly on the  line
-			// the user must add a space then the pipe is added here
-			if(!args.changeTheme.includes("|") && args.changeTheme.includes(" ")){
-				var r = args.changeTheme.split(" ")[0] +"|"+args.changeTheme.split(" ")[1];
-				args.changeTheme = r;
-			}
-
-			config.application["client-active-theme"] = args.changeTheme;
-			var newContent = JSON.stringify(config, null, 4);
-			generalSupport.writeToFile(file,newContent);
-		});
-
-	}
 }
+
+
 
 function buildFormConfig(){
 	if(!isExecutedFromRoot()){
@@ -418,55 +804,74 @@ function createNewThemePlugin(){
 		return false;
 	}
 
-	if(args.name==undefined){
-		return "Please provide a theme name";
+	var themeParams = null;
+	if(args.theme.includes(",")){
+		themeParams = args.theme.split(",");
+	}else if(args.theme.includes(" ")){
+		themeParams = args.theme.split(" ");
 	}
+	// appfactory plugin --theme "pluginId,themeName"
+	var plugin = themeParams[0];
+	var theme = themeParams[1];
 
-	var pluginDir = args.theme;
-	var dir = args.name;
-	var startScript = createStartScriptFileName();
+	var configFile = process.cwd()+"/config.appfac.js";
+	generalSupport.readFile(configFile,function(configContent){
 
-	var v1 = startScript.split(".js"); 
-	var startScriptWithoutEndFileType = v1[0];
+		var config = JSON.parse(configContent);
+		var plugins = config.application.plugins;
 
-	var pluginThemeFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
-	
-	generalSupport.readFile(pluginThemeFile,function(content){
-
-		var config = JSON.parse(content);
-		var path = "";
-
-		if(args.a!=undefined){
-			path = "admin";
-			if(config.admin==undefined){
-				config.admin = [];
-			}
-			config.admin.push({"directory":dir,"start":startScriptWithoutEndFileType});
-		}else{
-			path = "client";
-			if(config.client==undefined){
-				config.client = [];
-			}
-			config.client.push({"directory":dir,"start":startScriptWithoutEndFileType});
+		if(plugins[plugin] == undefined){
+			console.log("Plugin does not exist: "+plugin);
+			return;
 		}
 
+		var pluginDir = plugins[plugin].directory;
 
+		var pluginConfigFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
+		generalSupport.readFile(pluginConfigFile,function(content){
 
-		var pluginConfig = config;
-		var pluginConfigFile = pluginThemeFile;
-		var themeDirectoryName = dir;
-		var pluginDirectoryName = pluginDir;
+			var pluginConfig = JSON.parse(content);
+			var themes = null;
+			var type = "";
+			if(args.a){
+				type = "admin";
+				themes = pluginConfig['admin-themes'];
+			}else{
+				type = "client";
+				themes = pluginConfig['client-themes'];
+			}
 
-		pluginInit.constructThemeDirectory(
-			pluginConfigFile,
-			pluginDirectoryName,
-			themeDirectoryName,
-			startScript,
-			pluginConfig,
-			path
-		);
+			for (var i = 0; i < themes.length; i++) {
+				if(themes[i].theme == theme){
+					console.log("Theme already exist: "+theme);
+					return;
+				}
+			}
 
-	});//end of reading config file
+			themes.push({
+				"directory": theme,
+				"start": "theme_interface",
+				"head": [
+					"<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/styles.css\">"
+				]
+			});
+
+			generalSupport.writeToFile(pluginConfigFile, JSON.stringify(pluginConfig,null,4));
+
+			pluginInit.constructTypeThemeDirectory(type,pluginDir,theme,plugin);
+
+			var isclient = true;
+			if(args.a){
+				isclient = false;
+			}
+
+			pluginInit.changeTheme(plugin,theme,isclient);
+
+			console.log("theme created");
+		});
+
+	});
+	
 }
 
 function createStartScriptFileName(){

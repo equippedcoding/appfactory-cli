@@ -48,8 +48,8 @@ module.exports = (args) => {
 		}
 
 		var opts = null;
-		if(args.component.includes("|")){
-			opts = args.component.split("|");
+		if(args.component.includes(",")){
+			opts = args.component.split(",");
 		}else if(args.component.includes(" ")){
 			opts = args.component.split(" ");
 		}
@@ -200,21 +200,14 @@ function compComponentOption(pluginName,themeName,compName,path){
 	// path = client | admin 
 
 	var jsComponent = 
-`define(LoadDependencies('`+pluginName+`/`+ path +`',
-//components
-[],
-//views
-[],
-//libs
-[]
-), function(){
+`define(function(require, exports, module){
 
-	function init(app,config,segments){
+function init(app){
 
 
-	}
+}
 
-	return init;
+return init;
 
 });
 
@@ -308,14 +301,7 @@ function classComponentOption(pluginName,className,path){
 
 
 	var classComponent = 
-`define(LoadDependencies('`+pluginName+`/`+ path +`',
-//components
-[],
-//views
-[],
-//libs
-[]
-), function(){
+`define(function(require, exports, module){
 
 function ${name}(){
 
