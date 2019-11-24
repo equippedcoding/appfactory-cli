@@ -69,7 +69,7 @@ module.exports = (args) => {
 
 
 		// check that plugin exist
-		var pluginPath = process.cwd()+"/js/plugins/"+pluginName;
+		var pluginPath = process.cwd()+"/plugins/"+pluginName;
 		var pluginDoesExist = fs.pathExistsSync(pluginPath);
 		if(!pluginDoesExist){
 			console.log("Plugin does not exist: "+pluginName);
@@ -77,7 +77,7 @@ module.exports = (args) => {
 		}
 
 		// check that theme exist
-		var themePath = process.cwd()+"/js/plugins/"+pluginName+"/"+path+"/themes/"+themeName;
+		var themePath = process.cwd()+"/plugins/"+pluginName+"/"+path+"/themes/"+themeName;
 		var themeDoesExist = fs.pathExistsSync(themePath);
 		if(!themeDoesExist){
 			console.log("Plugin theme does not exist: "+themeName);
@@ -125,7 +125,7 @@ module.exports = (args) => {
 
 
 		// check that plugin exist
-		var pluginPath = process.cwd()+"/js/plugins/"+pluginName;
+		var pluginPath = process.cwd()+"/plugins/"+pluginName;
 		var pluginDoesExist = fs.pathExistsSync(pluginPath);
 		if(!pluginDoesExist){
 			console.log("Plugin does not exist: "+pluginName);
@@ -235,7 +235,7 @@ return init;
 	applyType(appliedType);
 
 
-	var pathExist = process.cwd()+"/js/plugins/"+pluginName+"/"+path+"/themes/"+themeName+"/components/"+type;
+	var pathExist = process.cwd()+"/plugins/"+pluginName+"/"+path+"/themes/"+themeName+"/components/"+type;
 
 	// check is path exist if not then create
 	//var doesExist = fs.pathExistsSync(pathExist);
@@ -295,8 +295,8 @@ function classComponentOption(pluginName,className,path){
 	}
 	//check_name = path+"/classes/"+check_name;
 
-	var _checkIfClassExist2 = process.cwd()+"/js/plugins/"+pluginName+"/"+path+"/classes/";
-	var _checkIfClassExist = process.cwd()+"/js/plugins/"+pluginName+"/"+path+"/classes/"+check_name;
+	var _checkIfClassExist2 = process.cwd()+"/plugins/"+pluginName+"/"+path+"/classes/";
+	var _checkIfClassExist = process.cwd()+"/plugins/"+pluginName+"/"+path+"/classes/"+check_name;
 
 
 
@@ -604,21 +604,21 @@ return ${name}
 	if(plugin!=""){
 		if(isAdmin){
 			if(isClass){
-				pathExist = process.cwd()+"/js/plugins/"+plugin+"/client/classes/";
+				pathExist = process.cwd()+"/plugins/"+plugin+"/client/classes/";
 				type = "";
 			}else{
-				pathExist = process.cwd()+"/js/plugins/"+plugin+"/client/components/"+type;
+				pathExist = process.cwd()+"/plugins/"+plugin+"/client/components/"+type;
 			}
 		}else{
 			if(isClass){
-				pathExist = process.cwd()+"/js/plugins/"+plugin+"/admin/classes/";
+				pathExist = process.cwd()+"/plugins/"+plugin+"/admin/classes/";
 				type = "";
 			}else{
-				pathExist = process.cwd()+"/js/plugins/"+plugin+"/admin/components/"+type;
+				pathExist = process.cwd()+"/plugins/"+plugin+"/admin/components/"+type;
 			}
 		}
 
-		var u = process.cwd()+"/js/plugins/"+plugin;
+		var u = process.cwd()+"/plugins/"+plugin;
 		var doesExist = fs.pathExistsSync(u);
 		if(!doesExist){
 			console.log("Plugin does not exist: "+plugin);
@@ -637,15 +637,15 @@ return ${name}
 
 		if(isAdmin){
 			if(isClass){
-				pathExist = process.cwd()+"/js/client/classes/";
+				pathExist = process.cwd()+"/client/classes/";
 			}else{
-				pathExist = process.cwd()+"/js/client/components/"+type;
+				pathExist = process.cwd()+"/client/components/"+type;
 			}
 		}else{
 			if(isClass){
-				pathExist = process.cwd()+"/js/admin/classes/";
+				pathExist = process.cwd()+"/admin/classes/";
 			}else{
-				pathExist = process.cwd()+"/js/admin/components/"+type;
+				pathExist = process.cwd()+"/admin/components/"+type;
 			}
 		}
 	}

@@ -23,29 +23,31 @@ module.exports = () => {
 function constructThemeDirectory(pluginName,pluginDir,themeName){
     constructTypeThemeDirectory("admin",pluginDir,themeName,pluginName);
     constructTypeThemeDirectory("client",pluginDir,themeName,pluginName);
-    buildInitFile(pluginDir,themeName,"theme_interface.js");
-    buildInitFile(pluginDir,themeName,"theme_interface.js");
+
+    
+    buildInitFile(pluginDir,themeName,themeName);
+    buildInitFile(pluginDir,themeName,themeName);
 }
 function constructTypeThemeDirectory(type,pluginDir,themeName,pluginName){
-	var plugin_theme_dir = process.cwd()+"/js/plugins/"+pluginDir+"/"+type+"/themes/"+themeName;
+	var plugin_theme_dir = process.cwd()+"/plugins/"+pluginDir+"/"+type+"/themes/"+themeName;
     fs2.ensureDirSync(plugin_theme_dir);
 
-    var plugin_theme_dir_comp = process.cwd()+"/js/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/components";
+    var plugin_theme_dir_comp = process.cwd()+"/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/components";
     fs2.ensureDirSync(plugin_theme_dir_comp);
 
-    var plugin_theme_dir_styles = process.cwd()+"/js/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/styles";
+    var plugin_theme_dir_styles = process.cwd()+"/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/styles";
     fs2.ensureDirSync(plugin_theme_dir_styles);
 
-    var plugin_theme_dir_styles_css = process.cwd()+"/js/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/styles/css";
+    var plugin_theme_dir_styles_css = process.cwd()+"/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/styles/css";
     fs2.ensureDirSync(plugin_theme_dir_styles_css);
 
-    var plugin_theme_dir_styles_sass = process.cwd()+"/js/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/styles/sass";
+    var plugin_theme_dir_styles_sass = process.cwd()+"/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/styles/sass";
     fs2.ensureDirSync(plugin_theme_dir_styles_sass);
 
     generalSupport.writeToFile(plugin_theme_dir_styles_css+"/styles.css", "");
 
     var themeString = createThemeInterfaceScript(pluginName,themeName,type,pluginDir);
-    var themepath = process.cwd()+"/js/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/theme_interface.js"
+    var themepath = process.cwd()+"/plugins/"+pluginDir+"/"+type+"/themes/"+themeName+"/theme_interface.js"
     generalSupport.writeToFile(themepath,themeString);
 
 }
@@ -71,7 +73,7 @@ function buildInitFile(pluginDir,adminThemeName,themeName,start){
     initfile = initfile.replace("\""+a+"\"",a);
     initfile = initfile.replace("\""+c+"\"",c);
 
-    var p = process.cwd()+"/js/plugins/"+pluginDir+"/init.js";
+    var p = process.cwd()+"/plugins/"+pluginDir+"/init.js";
 
     generalSupport.writeToFile(p, initfile);
 
@@ -126,7 +128,7 @@ function changeTheme(plugin,newTheme,isClient){
 		var client_active_theme = mainConfig['application']['client-active-theme'];
 		var admin_active_theme = mainConfig['application']['admin-active-theme'];
 
-		var path = process.cwd()+"/js/plugins/"+plugin+"/plugin.config.json";
+		var path = process.cwd()+"/plugins/"+plugin+"/plugin.config.json";
 		generalSupport.readFile(path,function(content2){
 
 			var pluginConfig = JSON.parse(content2);
@@ -183,21 +185,28 @@ function changeTheme(plugin,newTheme,isClient){
 		    initfile = initfile.replace("\""+a+"\"",a);
 		    initfile = initfile.replace("\""+c+"\"",c);
 
-		    var mn = process.cwd()+"/js/plugins/"+plugin+"/init.js";
+		    var mn = process.cwd()+"/plugins/"+plugin+"/init.js";
 		    generalSupport.writeToFile(mn,initfile);
 
 		    generalSupport.writeToFile(mainConfigFile,JSON.stringify(mainConfig,null,4));
 
 
-		    generalSupport.writeToFile(process.cwd()+"/js/main.js",
+		    generalSupport.writeToFile(process.cwd()+"/plugins/main.js",
 `// This file is auto generated. Any changes will be over written.
-$.getJSON( "config.appfac.js", function( config ) {
-	require.config(config);
-	requirejs(['./plugins/${plugin}/init'],function(activePlugin){
-		var app = new ApplicationContextManager(config);
-		app.initializeApplication(true,activePlugin);
-	});
-});
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+		var config = JSON.parse(xhttp.responseText);
+		console.log(config);
+		require.config(config['requirejs-config']);
+		requirejs(['appfactory','plugins/${plugin}/init'],function(appfactory,activePlugin){
+			var app = new ApplicationContextManager(config);
+			app.initializeApplication(true,activePlugin);
+		});
+    }
+};
+xhttp.open("GET", "config.appfac.js", true);
+xhttp.send();
 `);
 
 		});
@@ -226,7 +235,7 @@ function createTemplatePluginConfig(pluginName,pluginId,pluginDir){
             "directory": "default",
             "start": "theme_interface",
             "head": [
-                "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/default/client/themes/default/styles/css/styles.css\">"
+                "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./plugins/default/client/themes/default/styles/css/styles.css\">"
             ]
         }
     ]
@@ -256,7 +265,7 @@ function createDirectoryAndFiles(path,startScript,pluginDir,dir){
 }
 
 function createWriteFile(path,pluginDir,dir,startScript,startInitContents){
-	var starInitFile = process.cwd()+"/js/plugins/"+pluginDir+"/"+path+"/themes/"+dir+"/"+startScript;
+	var starInitFile = process.cwd()+"/plugins/"+pluginDir+"/"+path+"/themes/"+dir+"/"+startScript;
 	
 	var doesExist = fs.pathExistsSync(starInitFile);
 	if(!doesExist){
@@ -265,13 +274,13 @@ function createWriteFile(path,pluginDir,dir,startScript,startInitContents){
 	}
 
 	// create default styles.css
-	var pathAdminExist = process.cwd()+"/js/plugins/"+pluginDir+"/"+path+"/themes/"+dir+"/styles/css/";
+	var pathAdminExist = process.cwd()+"/plugins/"+pluginDir+"/"+path+"/themes/"+dir+"/styles/css/";
 	var doesAdminExist = fs.pathExistsSync(pathAdminExist);
 	if(!doesAdminExist){
 		fs.ensureDirSync(pathAdminExist);
 	}
 
-	var defaultStyles = process.cwd()+"/js/plugins/"+pluginDir+"/"+path+"/themes/"+dir+"/styles/css/styles.css";
+	var defaultStyles = process.cwd()+"/plugins/"+pluginDir+"/"+path+"/themes/"+dir+"/styles/css/styles.css";
 	doesExist = fs.pathExistsSync(defaultStyles);
 	if(!doesExist){
 		fs.writeFile(defaultStyles, "", function(err) {
@@ -282,7 +291,7 @@ function createWriteFile(path,pluginDir,dir,startScript,startInitContents){
 
 function createWriteInitFile(pluginDir,defaultFileStructure){
 	//var location = process.cwd()+"/js/client/components/"+type+"/"+name;
-	var location = process.cwd()+"/js/plugins/"+pluginDir+"/init.js";
+	var location = process.cwd()+"/plugins/"+pluginDir+"/init.js";
 
 	fs.writeFile(location, defaultFileStructure, function(err) {
 	    if(err) {
@@ -294,13 +303,13 @@ function createWriteInitFile(pluginDir,defaultFileStructure){
 
 function createIfNotExist(path,pluginDir,dir){
 
-	var pathAdminExist = process.cwd()+"/js/plugins/"+pluginDir+"/"+path+"/themes/"+dir;
+	var pathAdminExist = process.cwd()+"/plugins/"+pluginDir+"/"+path+"/themes/"+dir;
 	var doesAdminExist = fs.pathExistsSync(pathAdminExist);
 	if(!doesAdminExist){
 		fs.ensureDirSync(pathAdminExist);
 	}
 
-	var pathClientExist = process.cwd()+"/js/plugins/"+pluginDir+"/"+path+"/themes";
+	var pathClientExist = process.cwd()+"/plugins/"+pluginDir+"/"+path+"/themes";
 	var doesClientExist = fs.pathExistsSync(pathClientExist);
 	if(!doesClientExist){
 		fs.ensureDirSync(pathClientExist);
@@ -336,8 +345,23 @@ return defaultFileStructure;
 
 }
 
-//function createStartInitScript(dir,path,pluginDir){
+
+
 function createThemeInterfaceScript(pluginName,themeName,path,pluginDir){
+
+	var g = "";
+	if(path=="client"){
+		g = createStartInitScriptForClient(pluginName,themeName,path,pluginDir);
+	}else{
+		g = createStartInitScriptForAdmin(pluginName);
+	}
+	
+	return g;
+
+}
+
+//function createStartInitScript(dir,path,pluginDir){
+function createStartInitScriptForClient(pluginName,themeName,path,pluginDir){
 
 		var startInitContents =
 `define(function(require, exports, module){
@@ -443,7 +467,7 @@ function createThemeInterfaceScript(pluginName,themeName,path,pluginDir){
 return startInitContents;
 
 }
-function createStartInitScript2(dir,path,pluginDir){
+function createStartInitScriptForAdmin(dir){
 			var startInitContents2 =
 `define(function(require, exports, module){
 

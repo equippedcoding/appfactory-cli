@@ -151,7 +151,7 @@ function createMarkup(){
 		.markdown-body .highlight pre, .markdown-body pre {
 		    padding: 16px;
 		    overflow: auto;
-		    font-size: 85%;
+		    font-size: 100%;
 		    line-height: 1.45;
 		    background-color: #f6f8fa;
 		    border-radius: 3px;

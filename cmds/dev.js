@@ -72,7 +72,7 @@ http.listen(9005, function(){
 	*/
 
 	var path = "client";
-	var pluginClientConfig = process.cwd()+"/js/plugins/"+"zibra5"+"/plugin.config.json";
+	var pluginClientConfig = process.cwd()+"/plugins/"+"zibra5"+"/plugin.config.json";
 	var pluginDirectoryName = "zibra5";
 	var themeDirectoryName = "PlayaTheme03";
 	var startScript = "init.js";

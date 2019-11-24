@@ -64,10 +64,9 @@ function runClientBuild(config){
 		return;
 	}
 
-	fs.ensureDirSync(process.cwd()+"/js/build/");
+	fs.ensureDirSync(process.cwd()+"/build/");
 	var buildconfigfile = process.cwd()+"/build-config.js";
 	generalSupport.writeToFile(buildconfigfile,JSON.stringify(config['requirejs-config'],null,4));
-
 
 	var htmlObj = config['index-config'];
 	var meta = '';
@@ -82,12 +81,12 @@ function runClientBuild(config){
 
 	var body = '';
 	for (var i = 0; i < htmlObj['body'].length; i++) {
-		if(htmlObj['body'][i].includes('js/libs/requirejs/require.js')==false){
+		if(htmlObj['body'][i].includes('requirejs/require.js')==false){
 			body += "\n\r"+htmlObj['body'][i];
 		}
 	}
 
-	body += "\n\r <script src=\"js/libs/requirejs/require.js\"></script>"
+	body += "\n\r <script src=\"libs/scripts/requirejs/require.js\"></script>"
 	body += "\n\r <script src=\""+config['requirejs-config']['out']+"\"></script>";
 
 	var htmlstring = 
@@ -108,7 +107,11 @@ function runClientBuild(config){
 
 `;
 
+
+
 	generalSupport.writeToFile(process.cwd()+"/static-index.html",htmlstring);
+
+
 
 	runNodeJSCommand(buildconfigfile);
 
@@ -118,6 +121,26 @@ function runClientBuild(config){
 
 
 function runNodeJSCommand(buildRunConfig){
+
+var child_process = require('child_process');
+child_process.exec(`node r.js -o ${buildRunConfig}`, function(err, stdout, stderr){
+	  	console.log("==================== err ============================");
+	  	if(err) console.log(err);
+	  	console.log("-------------------- stdout ----------------------------");
+	  	if(stdout) console.log(stdout);
+	  	console.log("-------------------- stderr -----------------------------");
+	  	if(stderr) console.log(stderr);
+	  	console.log("==================================================");
+
+	  	setTimeout(function(){
+	  		fs.removeSync(buildRunConfig)
+	  	},2000);
+	  
+});
+
+	return;
+
+
 	// node r.js -o js/build-run-config.js
 	var dir = exec(`node r.js -o ${buildRunConfig}`, function(err, stdout, stderr) {
 	  	console.log("==================================================");
@@ -129,7 +152,7 @@ function runNodeJSCommand(buildRunConfig){
 	  	console.log("==================================================");
 
 	  	setTimeout(function(){
-	  		fs.removeSync(buildRunConfig)
+	  		//fs.removeSync(buildRunConfig)
 	  	},2000);
 	  
 	});

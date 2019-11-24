@@ -384,7 +384,7 @@ function createNewPluginTemplate11(answers){
     return;
   }
 
-  var allplugins = process.cwd()+"/js/plugins/";
+  var allplugins = process.cwd()+"/plugins/";
 
   fs.readdir(allplugins, function (err, files) {
     if (err) {
@@ -410,29 +410,29 @@ function createNewPluginTemplate11(answers){
     generalSupport.writeToFile(appfacConfigFile, JSON.stringify(appfacConfig, null, 4));
 
     // plugin directory
-    var plugin_admin = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin";
+    var plugin_admin = process.cwd()+"/plugins/"+createNewPluginDir+"/admin";
     fs2.ensureDirSync(plugin_admin);
 
-    var plugin_admin_classes = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin/classes";
+    var plugin_admin_classes = process.cwd()+"/plugins/"+createNewPluginDir+"/admin/classes";
     fs2.ensureDirSync(plugin_admin_classes);
 
-    var plugin_admin_theme = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin/themes";
+    var plugin_admin_theme = process.cwd()+"/plugins/"+createNewPluginDir+"/admin/themes";
     fs2.ensureDirSync(plugin_admin_theme);
 
-    var plugin_client = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client";
+    var plugin_client = process.cwd()+"/plugins/"+createNewPluginDir+"/client";
     fs2.ensureDirSync(plugin_client);
 
-    var plugin_client_classes = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client/classes";
+    var plugin_client_classes = process.cwd()+"/plugins/"+createNewPluginDir+"/client/classes";
     fs2.ensureDirSync(plugin_client_classes);
 
-    var plugin_client_theme = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client/themes";
+    var plugin_client_theme = process.cwd()+"/plugins/"+createNewPluginDir+"/client/themes";
     fs2.ensureDirSync(plugin_client_theme);
 
     var jsonPluginConfig = pluginInit.createTemplatePluginConfig(createNewPluginName,createNewPluginId,createNewPluginDir);
     
 
     var jsonPluginConfigString = jsonPluginConfig;
-    var filename = process.cwd()+"/js/plugins/"+createNewPluginDir+"/plugin.config.json";
+    var filename = process.cwd()+"/plugins/"+createNewPluginDir+"/plugin.config.json";
     generalSupport.writeToFile(filename, jsonPluginConfigString);
 
     pluginInit.constructThemeDirectory(createNewPluginName,createNewPluginDir,"default");
@@ -453,7 +453,7 @@ function createNewPluginTemplate11(answers){
 
 
 
-  var mainJsonConfigFile = process.cwd()+"/js/plugins/plugin.config.json";
+  var mainJsonConfigFile = process.cwd()+"/plugins/plugin.config.json";
   var does_main_config_exist = fs2.pathExistsSync(mainJsonConfigFile);
   var main_config;
   if(does_main_config_exist){
@@ -492,7 +492,7 @@ function createNewPluginTemplate11(answers){
 
       try{
 
-        var file = process.cwd()+"/js/plugins/"+mainJSONConfig.directories[i]+"/plugin.config.json";
+        var file = process.cwd()+"/plugins/"+mainJSONConfig.directories[i]+"/plugin.config.json";
 
         const obj = fs2.readJsonSync(file, { throws: false });
 
@@ -523,31 +523,31 @@ function createNewPluginTemplate11(answers){
   }
 
 
-  var pluginExist = fs2.pathExistsSync(process.cwd()+"/js/plugins/"+createNewPluginDir);
+  var pluginExist = fs2.pathExistsSync(process.cwd()+"/plugins/"+createNewPluginDir);
   if(pluginExist){
     console.log("Plugin directory already exist: "+createNewPluginDir)
     return;
   }
 
   // plugin directory
-  var plugin_admin = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin";
+  var plugin_admin = process.cwd()+"/plugins/"+createNewPluginDir+"/admin";
   fs2.ensureDirSync(plugin_admin);
 
-  var plugin_admin_classes = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin/classes";
+  var plugin_admin_classes = process.cwd()+"/plugins/"+createNewPluginDir+"/admin/classes";
   fs2.ensureDirSync(plugin_admin_classes);
 
-  var plugin_admin_theme = process.cwd()+"/js/plugins/"+createNewPluginDir+"/admin/themes";
+  var plugin_admin_theme = process.cwd()+"/plugins/"+createNewPluginDir+"/admin/themes";
   fs2.ensureDirSync(plugin_admin_theme);
 
   //var a1 = plugin_admin+"/theme_interface.js";
 
-  var plugin_client = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client";
+  var plugin_client = process.cwd()+"/plugins/"+createNewPluginDir+"/client";
   fs2.ensureDirSync(plugin_client);
 
-  var plugin_client_classes = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client/classes";
+  var plugin_client_classes = process.cwd()+"/plugins/"+createNewPluginDir+"/client/classes";
   fs2.ensureDirSync(plugin_client_classes);
 
-  var plugin_client_theme = process.cwd()+"/js/plugins/"+createNewPluginDir+"/client/themes";
+  var plugin_client_theme = process.cwd()+"/plugins/"+createNewPluginDir+"/client/themes";
   fs2.ensureDirSync(plugin_client_theme);
 
 
@@ -587,7 +587,7 @@ function createNewPluginTemplate11(answers){
             "directory": "default",
             "start": "theme_interface",
             "head": [
-                "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/default/client/themes/default/styles/css/styles.css\">"
+                "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./plugins/default/client/themes/default/styles/css/styles.css\">"
             ]
         }
     ]
@@ -602,11 +602,11 @@ function createNewPluginTemplate11(answers){
 */
 
   var jsonPluginConfigString = JSON.stringify(jsonPluginConfig, null, 4);
-  var filename = process.cwd()+"/js/plugins/"+createNewPluginDir+"/plugin.config.json";
+  var filename = process.cwd()+"/plugins/"+createNewPluginDir+"/plugin.config.json";
   generalSupport.writeToFile(filename, jsonPluginConfigString);
 
   
-  var pluginThemeFile = process.cwd()+"/js/plugins/"+createNewPluginDir+"/plugin.config.json";
+  var pluginThemeFile = process.cwd()+"/plugins/"+createNewPluginDir+"/plugin.config.json";
   pluginInit.constructThemeDirectory(pluginThemeFile,createNewPluginDir,"default","theme_interface.js",jsonPluginConfig,"admin");
   pluginInit.constructThemeDirectory(pluginThemeFile,createNewPluginDir,"default","theme_interface.js",jsonPluginConfig,"client");
     

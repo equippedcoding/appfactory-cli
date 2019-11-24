@@ -319,7 +319,7 @@ function createThemeHTMLHeadTagCSS(){
 		stuff = args.css.split(" ");
 	}
 	if(stuff.length<3){
-		console.log("Please specify plugin_name plugin_theme sass_file");
+		console.log("Please specify plugin_name plugin_theme css_file");
 		return;
 	}
 
@@ -332,48 +332,42 @@ function createThemeHTMLHeadTagCSS(){
  	}
 
 
-	var globalPluginsConfigFile = process.cwd()+"/js/plugins/plugin.config.json";
-	generalSupport.readFile(globalPluginsConfigFile,function(globalContent){
+	var pluginConfigFile = process.cwd()+"/plugins/"+pluginDir+"/plugin.config.json";
+	generalSupport.readFile(pluginConfigFile,function(content){
+		var config = JSON.parse(content);
 
-		var globalPluginConfig = JSON.parse(globalContent);
+		var css;
+		if(args.a==undefined){
+			css = process.cwd()+"/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/"+css_file;
+		}else{
+			css = process.cwd()+"/plugins/"+pluginDir+"/admin/themes/"+theme+"/styles/css/"+css_file;
+		}
 
-		var pluginThemeFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
-		generalSupport.readFile(pluginThemeFile,function(content){
-			var config = JSON.parse(content);
+		var cssDir = process.cwd()+"/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/";
+		var doesAdminExist = fs.pathExistsSync(cssDir);
+		if(!doesAdminExist){
+			fs.ensureDirSync(cssDir);
+		}
 
-			var css;
-			if(args.a==undefined){
-				css = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/"+css_file;
-			}else{
-				css = process.cwd()+"/js/plugins/"+pluginDir+"/admin/themes/"+theme+"/styles/css/"+css_file;
+		generalSupport.writeToFile(css,"");
+
+		var clientConfig = config['client-themes'];
+
+		for (var i = 0; i < clientConfig.length; i++) {
+			if(clientConfig[i].directory==theme){
+				var csspath = "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/"+css_file+"\">"
+         		if(clientConfig[i].head==undefined || clientConfig[i].head==null){
+         			clientConfig[i].head = [];
+         		}
+     			clientConfig[i].head.push(csspath);
+     			break;
 			}
+		}
+		//config.client = clientConfig;				
 
-			var cssDir = process.cwd()+"/js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/";
-			var doesAdminExist = fs.pathExistsSync(cssDir);
-			if(!doesAdminExist){
-				fs.ensureDirSync(cssDir);
-			}
+		var configString = JSON.stringify(config, null, 4);
+		generalSupport.writeToFile(pluginConfigFile,configString);
 
-			generalSupport.writeToFile(css,"");
-
-    		var clientConfig = config.client;
-
-    		for (var i = 0; i < clientConfig.length; i++) {
-    			if(clientConfig[i].directory==theme){
-    				var csspath = "<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/"+css_file+"\">"
-             		if(clientConfig[i].head==undefined || clientConfig[i].head==null){
-             			clientConfig[i].head = [];
-             		}
-         			clientConfig[i].head.push(csspath);
-         			break;
-    			}
-    		}
-    		config.client = clientConfig;				
-
-			var globalConfigString = JSON.stringify(config, null, 4);
-			generalSupport.writeToFile(pluginThemeFile,globalConfigString);
-
-		});
 	});
 } // end of createThemeHTMLHeadTagCSS
 
@@ -767,7 +761,7 @@ function buildFormConfig(){
 
 	var pluginDirectoryName = args.buildFormConfig;
 	//var path = "client";
-	var pluginClientConfig = process.cwd()+"/js/plugins/"+pluginDirectoryName+"/plugin.config.json";
+	var pluginClientConfig = process.cwd()+"/plugins/"+pluginDirectoryName+"/plugin.config.json";
 
 	var doesExist = fs.pathExistsSync(pluginClientConfig);
 	if(!doesExist){
@@ -827,7 +821,7 @@ function createNewThemePlugin(){
 
 		var pluginDir = plugins[plugin].directory;
 
-		var pluginConfigFile = process.cwd()+"/js/plugins/"+pluginDir+"/plugin.config.json";
+		var pluginConfigFile = process.cwd()+"/plugins/"+pluginDir+"/plugin.config.json";
 		generalSupport.readFile(pluginConfigFile,function(content){
 
 			var pluginConfig = JSON.parse(content);
@@ -852,7 +846,7 @@ function createNewThemePlugin(){
 				"directory": theme,
 				"start": "theme_interface",
 				"head": [
-					"<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./js/plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/styles.css\">"
+					"<link rel=\"stylesheet\" type=\"text/css\" class=\"default\" href=\"./plugins/"+pluginDir+"/client/themes/"+theme+"/styles/css/styles.css\">"
 				]
 			});
 
@@ -1071,14 +1065,14 @@ plugins/plugin_name/admin/themes/theme_name/component
 
 	var pathExist;
 	if(isAdmin){
-		pathExist = process.cwd()+"/js/plugins/"+plugin+"/admin/components/"+type;
+		pathExist = process.cwd()+"/plugins/"+plugin+"/admin/components/"+type;
 	}else{
-		pathExist = process.cwd()+"/js/plugins/"+plugin+"/client/components/"+type;
+		pathExist = process.cwd()+"/plugins/"+plugin+"/client/components/"+type;
 	}
 
 
 	// check if plugin exist
-	var u = process.cwd()+"/js/plugins/"+plugin;
+	var u = process.cwd()+"/plugins/"+plugin;
 	var doesExist = fs.pathExistsSync(u);
 	if(!doesExist){
 		console.log("Plugin does not exist: "+plugin);
@@ -1137,7 +1131,7 @@ function classComponentOption(plugin,name,isAdmin){
 	}else{
 		check_name = "client/"+check_name;
 	}
-	var _checkIfClassExist = process.cwd()+"/js/plugins/"+plugin+"/"+check_name;
+	var _checkIfClassExist = process.cwd()+"/plugins/"+plugin+"/"+check_name;
 	var classExist = fs.pathExistsSync(_checkIfClassExist);
 	if(classExist){
 		console.log("Class already exist: "+name);
@@ -1166,12 +1160,12 @@ return ${name};
 
 	var pathExist;
 	if(isAdmin){
-		pathExist = process.cwd()+"/js/plugins/"+plugin+"/admin/classes";
+		pathExist = process.cwd()+"/plugins/"+plugin+"/admin/classes";
 	}else{
-		pathExist = process.cwd()+"/js/plugins/"+plugin+"/client/classes";
+		pathExist = process.cwd()+"/plugins/"+plugin+"/client/classes";
 	}
 
-	var u = process.cwd()+"/js/plugins/"+plugin;
+	var u = process.cwd()+"/plugins/"+plugin;
 	var doesExist = fs.pathExistsSync(u);
 	if(!doesExist){
 		console.log("Plugin does not exist: "+plugin);
