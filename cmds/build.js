@@ -41,10 +41,21 @@ if(!isExecutedFromRoot()){
 	return false;
 }
 
+const filterFunc = (src, dest) => {
+// console.log(src);
+// console.log(dest);
+return true;
+}
+
+var rJSFileLoc = __dirname+"/tmp/r.js";
+
 var	appfacConfig = "config.appfac.js";
 fs.readFile(appfacConfig, 'utf8', function(err, configFile) {
-	var config = JSON.parse(configFile);
-	runClientBuild(config);
+	fs.copy(rJSFileLoc, process.cwd()+"/r.js", { filter: filterFunc }, err3 => {
+		if (err3) return console.error(err3);
+		var config = JSON.parse(configFile);
+		runClientBuild(config);
+	});
 });
 
 
@@ -133,7 +144,8 @@ child_process.exec(`node r.js -o ${buildRunConfig}`, function(err, stdout, stder
 	  	console.log("==================================================");
 
 	  	setTimeout(function(){
-	  		fs.removeSync(buildRunConfig)
+	  		fs.removeSync(buildRunConfig);
+	  		fs.removeSync(process.cwd()+"/r.js");
 	  	},2000);
 	  
 });

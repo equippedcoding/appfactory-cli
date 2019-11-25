@@ -14,14 +14,14 @@ module.exports = async (args) => {
 
 
 
-	//createNewAppfactoryJSApp();
+	createNewAppfactoryJSApp();
 
 
 
 	function createNewAppfactoryJSApp(){
 
 
-const spinner = ora().start();
+//const spinner = ora().start();
 
 // TODO: change to where your zip file is located
 const repoName = 'node-zip-download-sample';
@@ -58,6 +58,10 @@ if(args.title!=undefined){
 
 const request = require('superagent');
 
+// setTimeout(function(){
+//   spinner.stop();
+// },7000);
+
 request
   .get(source)
   .on('error', function(error) {
@@ -66,13 +70,124 @@ request
   .pipe(fs.createWriteStream(zipFile))
   .on('finish', function() {
 
-    setTimeout(function(){
-
       var zip = new admZip(zipFile);
       var zipEntries = zip.getEntries(); // an array of ZipEntry records
 
       var dirName = zipEntries[0].entryName;
-      zip.extractAllTo(dirName, outputDir, true);
+
+      var placeDir = outputDir+"/"+dirName;
+
+      var rootTmp = __dirname+"/tmp/appfactory_tmp/setup_files";
+
+      var phpIncludesDir = process.cwd()+"/control_panel/admin/includes";
+      var tmp_phpIncludesDir = rootTmp+"/includes";
+
+      fs.ensureDir(tmp_phpIncludesDir);
+
+      var pluginsDirectory = process.cwd()+"/plugins";
+      var tmp_pluginsDirectory = rootTmp+"/plugins";
+
+      fs.ensureDir(tmp_pluginsDirectory);
+
+
+      const filterFunc = (src, dest) => {
+        // console.log(src);
+        // console.log(dest);
+        return true;
+      }
+
+      zip.extractAllTo(placeDir, outputDir, true);
+
+      console.log("Updating...");
+
+      generalSupport.readFile(placeDir+"/"+dirName+"/config.appfac.js",function(newContents){
+
+        generalSupport.readFile(process.cwd()+"/config.appfac.js",function(oldContents){
+          var newConfig = JSON.parse(newContents);
+          var oldConfig = JSON.parse(oldContents);
+
+          if(newConfig.version==undefined){
+            newConfig.version = "5.6.4";
+          }
+
+          var tmpObj = {};
+          tmpObj['version'] = newConfig.version;
+          for(prop in oldConfig){
+            if(prop != "version"){
+              tmpObj[prop] = oldConfig[prop];
+            }
+          }
+
+          //oldConfig['version'] = newConfig['version'];
+
+          oldConfig = tmpObj;
+
+
+          // copy control_panel/admin/inlcudes
+          fs.copy(phpIncludesDir, tmp_phpIncludesDir, { filter: filterFunc }, err1 => {
+            if (err1) return console.error(err1);
+            // copy plugins directory
+            fs.copy(pluginsDirectory, tmp_pluginsDirectory, { filter: filterFunc }, err2 => {
+              if (err2) return console.error(err2);
+              // copy appfact.config.
+              //fs.copy(process.cwd()+"/config.appfac.js", rootTmp+"/config.appfac.js", { filter: filterFunc }, err3 => {
+              //  if (err3) return console.error(err3);
+
+                runit(oldConfig);
+              //});
+            });
+          });
+        });
+      });
+
+
+
+
+
+
+      function runit(oldConfig){
+
+      fs.emptyDir(process.cwd(), function(err1){
+        fs.copy(placeDir+"/"+dirName, process.cwd(), { filter: filterFunc }, err2 => {
+          if (err2) return console.error(err2);
+
+          // copy control_panel/admin/inlcudes
+          fs.copy(tmp_phpIncludesDir, phpIncludesDir, { filter: filterFunc }, err5 => {
+            if (err5) return console.error(err5);
+            // copy plugins directory
+            fs.copy(tmp_pluginsDirectory, pluginsDirectory, { filter: filterFunc }, err4 => {
+              if (err4) return console.error(err4);
+
+              var configString = JSON.stringify(oldConfig, null, 4);
+              generalSupport.writeToFile(process.cwd()+"/config.appfac.js",configString);
+              
+              // copy appfact.config.
+              //fs.copy(rootTmp+"/config.appfac.js", process.cwd()+"/config.appfac.js", { filter: filterFunc }, err3 => {
+              //  if (err3) return console.error(err3);
+
+                fs.remove(placeDir);
+                fs.remove(rootTmp);
+              //});
+            });
+          });
+        });
+      });
+
+
+
+      }
+
+
+
+
+
+
+
+      // fs.remove(placeDir, err => {
+      //   if (err) return console.error(err)
+
+      //   console.log('success!')
+      // });
       // setTimeout(function(){
       //   fs2.moveSync(dirName+"/"+dirName, process.cwd()+"/"+newDir, { overwrite: true });
       //   fs2.removeSync(dirName);
@@ -97,98 +212,10 @@ request
       //   spinner.stop();
       // },3000);
 
-    },1000);
       
   });
 
-function handleHTMLFile(indexConfig){
-    var appfactorystart = "js/config/libs/appfactorystarter.js",
-      main = "js/main.js",
-      outputBuild = "js/build.min.js",
-      appfacConfig = "config.appfac.js",
-      index_meta = "",
-      index_head = "",
-    index_title = "",
-    index_body = "";
-    index_scripts = "",
-    index_doctype = "";  
 
-    var defaultDoctype = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">";
-    var index_title = (indexConfig['title']==undefined) ? "" : indexConfig['title'];
-    var index_doctype = (indexConfig['doctype']==undefined) ? defaultDoctype : indexConfig['doctype'];
-
-    var metaConf = indexConfig['meta'];
-    for(var i=0; i<metaConf.length; i++){
-      if(index_meta=="")
-        index_meta = "\t"+metaConf[i];
-      else
-        index_meta = index_meta+"\n\t"+metaConf[i];
-    }
-
-    var headConf = indexConfig['head'];
-    for(var i=0; i<headConf.length; i++){
-      if(index_head=="")
-        index_head = "\t"+headConf[i];
-      else
-        index_head = index_head+"\n\t"+headConf[i];
-    }
-
-    var bodyConf = indexConfig['body'];
-    for(var i=0; i<bodyConf.length; i++){
-      if(index_body=="")
-        index_body = "\t"+bodyConf[i];
-      else
-        index_body = index_body+"\n\t"+bodyConf[i];
-    }
-
-    var scriptsConf = indexConfig['scripts'];
-    for(var i in scriptsConf){
-      if(index_scripts=="")
-        index_scripts = "\t"+scriptsConf[i];
-      else
-        index_scripts = index_scripts+"\n\t"+scriptsConf[i];
-    }
-
-    var indeHTML = applyHTML(
-           index_doctype
-          ,index_meta
-          ,index_head
-          ,index_title
-          ,index_body
-          ,index_scripts
-        );
-
-    var writeStream = fs.createWriteStream(process.cwd()+"/"+newDir+"/index.html");
-    writeStream.write(indeHTML);
-    writeStream.end();
-
-  }
-
-function applyHTML(doctypeConf,metaConf,headConf,titleConf,bodyConf,scriptsConf){
-var indexHTML = 
-`
-  ${doctypeConf}
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<head>
-  ${metaConf}
-  
-
-    ${headConf}
-
-  <title>${titleConf}</title>
-</head>
-<body>  
-
-
-
-  ${bodyConf}
-
-  ${scriptsConf}
-</body>
-</html>
-`;
-  return indexHTML;
-  }
 
 }//END
 
