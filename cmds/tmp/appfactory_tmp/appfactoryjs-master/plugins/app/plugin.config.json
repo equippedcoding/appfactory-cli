@@ -1,0 +1,25 @@
+{
+    "name": "App",
+    "id": "_app",
+    "url": "-",
+    "directory": "app",
+    "start":"init",
+    "services": {
+        "dir": "-"
+    },
+    "admin-themes": [
+        {
+            "directory": "default",
+            "start": "theme_interface"
+        }
+    ],
+    "client-themes": [
+        {
+            "directory": "default",
+            "start": "theme_interface",
+            "head": [
+                "<link rel=\"stylesheet\" type=\"text/css\" href=\"plugins/app/client/themes/default/styles/css/styles.css\">"
+            ]
+        }
+    ]
+}

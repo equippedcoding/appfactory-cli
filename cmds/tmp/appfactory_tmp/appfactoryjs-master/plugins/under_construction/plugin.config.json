@@ -1,0 +1,23 @@
+{
+    "name": "Under Construction",
+    "id": "under_construction",
+    "url": "-",
+    "start": "init",
+    "active": true,
+    "directory": "under_construction",
+    "admin-themes": [
+        {
+            "directory": "default",
+            "start": "theme_interface"
+        }
+    ],
+    "client-themes": [
+        {
+            "directory": "default",
+            "start": "theme_interface",
+            "head": [
+                "<link rel=\"stylesheet\" type=\"text/css\" href=\"plugins/under_construction/client/themes/default/styles/css/styles.css\">"
+            ]
+        }
+    ]
+}
