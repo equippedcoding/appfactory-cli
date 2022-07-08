@@ -1,12 +1,19 @@
-require('../utils/polyfills');
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
 
+import('../utils/polyfills.js');
+const fs = require('fs-extra');
+import {readFile, checkIfValid, writeToFile} from './support/general_support.js';
+
+const mainConfigFile = "main.config.json";
+/*
 const ora = require('ora');
 const ghdownload = require('github-download'); 
 const exec = require('exec');
 // const request = require('superagent');
 const fs2 = require('fs');
 const ncp = require('ncp').ncp; 
-const fs = require('fs-extra');
+
 const AdmZip = require('adm-zip');
 const appUtils = require('../utils/app.js');
 
@@ -20,12 +27,472 @@ var archiver = require('archiver');
 var ip = require('ip');
 const _eval = require('eval');
 const strip = require('strip-comments');
+const exp = require('constants');
 var loginSupport = require('./support/login_support')();
 var generalSupport = require('./support/general_support')();
 
 var mainConfigFile = generalSupport.mainConfigFile;
+*/
 
-module.exports = (args) => {
+
+export function Add(args){
+	if(isExecutedFromRoot()){
+		if(args.component!=undefined){
+			configureComponent(args);
+		}else if(args.class!=undefined){
+			createNewClass(args);
+		}
+	}
+};
+function isExecutedFromRoot(){
+	var isRoot = true;
+	var currentDir = process.cwd()+"/main.config.json";
+	const isroot = fs.pathExistsSync(currentDir);
+	if(isroot==false)
+		console.log("Please run command in project root directory!");
+	return isroot;	
+}
+function createNewClass(args){
+	getAppfacConfigFile(args, 'class', args.class, function(){
+
+		var opts = null;
+		if(args.class.includes("|")){
+			opts = args.class.split("|");
+		}else if(args.class.includes(" ")){
+			opts = args.class.split(" ");
+		}else{
+			opts = args.class.split(" ");
+		}
+
+		if(opts.length==1){
+			var _n1 = opts[0];
+			opts[0] = "app";
+			opts[1] = _n1
+		}else if(opts.length==0){
+			console.log("Please provide all params \"plugin_name class_name\"");
+			return;
+		}
+
+		var pluginName = opts[0];
+		var className = opts[1];
+
+		var path = "client";
+		if(args.a!=undefined){
+			path = "admin";
+		}
+
+		// check that plugin exist
+		var pluginPath = process.cwd()+"/plugins/"+pluginName;
+		var pluginDoesExist = fs.pathExistsSync(pluginPath);
+		if(!pluginDoesExist){
+			console.log("Plugin does not exist: "+pluginName);
+			return;
+		}
+
+		// check that component has no spaces and any special characters except _
+		var isNameValid = checkIfValid(className,["_","-"," ",".","/","(",")","[","]","+","=","*","*","%","$","#","@","!","|","\\"]);
+		if(!isNameValid){
+			console.log("Please provide a valid class name");
+			return;
+		}
+		
+		var configFile = process.cwd()+"/"+mainConfigFile;
+		var pluginConfigFile = process.cwd()+"/plugins/"+pluginName+"/plugin.config.json";
+		readFile(configFile,function(content){
+			var config = JSON.parse(content);
+			readFile(pluginConfigFile,function(content2){
+				var pluginConfig = JSON.parse(content2);
+				classComponentOption(pluginName,className,path,config,configFile,pluginConfig,pluginConfigFile);
+			});
+		});
+	});
+}
+function configureComponent(args){
+	getAppfacConfigFile(args,'component', args.component, function(pluginName,themeName,compName,appfacConfig){
+
+		var path = "client";
+		if(args.a!=undefined){
+			path = "admin";
+		}
+
+		var pluginConfigFile = process.cwd()+"/plugins/"+pluginName+"/plugin.config.json";
+
+		// check that plugin exist
+		var pluginPath = process.cwd()+"/plugins/"+pluginName;
+		var pluginDoesExist = fs.pathExistsSync(pluginPath);
+		if(!pluginDoesExist){
+			console.log("Plugin does not exist: "+pluginName);
+			return;
+		}
+
+		// check that theme exist
+		var themePath = process.cwd()+"/plugins/"+pluginName+"/"+path+"/themes/"+themeName;
+		var themeDoesExist = fs.pathExistsSync(themePath);
+		if(!themeDoesExist){
+			console.log("Plugin theme does not exist: "+themeName);
+			return;
+		}
+
+		// check that component has no spaces and any special characters except _
+		var isNameValid = checkIfValid(compName,["_","-"]);
+		if(!isNameValid){
+			console.log("Please provide a valid component name");
+			return;
+		}
+
+		var configFile = process.cwd()+"/"+mainConfigFile;
+		var pluginConfigFile = process.cwd()+"/plugins/"+pluginName+"/plugin.config.json";
+		readFile(configFile,function(content){
+			var config = JSON.parse(content);
+
+			readFile(pluginConfigFile,function(content2){
+				var pluginConfig = JSON.parse(content2);
+
+				compComponentOption(args,pluginName,themeName,compName,path,config,configFile,pluginConfig,pluginConfigFile);
+
+			});
+		});
+	});
+}
+function getAppfacConfigFile(args,type,param,callback){
+	var _config_file = process.cwd()+"/"+mainConfigFile;
+	readFile(_config_file,function(content){
+		var appfacConfig = JSON.parse(content);
+		var appfacActiveTheme = null;
+		var appfacActivePlugin = null;
+		var p;
+
+		if(args.a==undefined){
+			var p1 = appfacConfig['application']['client-active-theme'];
+			if(p1!=undefined && p1!=null)
+				p = p1.split("|");
+		}else{
+			var p1 = appfacConfig['application']['admin-active-theme'];
+			if(p1!=undefined && p1!=null)
+				p = p1.split("|");
+		}
+
+		if(type=='class'){
+
+			var filename = "";
+			var opts = null;
+			if(param.includes("|")){
+				opts = param.split("|");
+			}else if(param.includes(" ")){
+				opts = param.split(" ");
+			}else{
+				opts = param.split(" ");
+			}
+
+			if(opts.length==1){
+				pluginDir = "app";
+				filename = p[0];
+			}else if(opts.length==2){
+				pluginDir = p[0];
+				filename = p[1];
+			}
+
+			var obj = {
+				plugin: pluginDir,
+				filename: filename
+			};
+
+
+			callback(obj);
+
+		}else if(type=='component'){
+			if(p.length==2){
+				appfacActivePlugin = p[0];
+				appfacActiveTheme = p[1];
+			}
+
+			var opts = null;
+			if(param.includes("|")){
+				opts = param.split("|");
+			}else if(param.includes(" ")){
+				opts = param.split(" ");
+			}else{
+				opts = param.split(" ");
+			}
+			if(opts.length==1){
+				var _n1 = opts[0];
+				opts[0] = (appfacActivePlugin==null) ? "app" : appfacActivePlugin;
+				opts[1] = (appfacActiveTheme==null) ? "default" :appfacActiveTheme;
+				opts[2] = _n1;
+			}else if(opts.length==2){
+				var _n1 = opts[0];
+				var _n2 = opts[1];
+				opts[0] = (appfacActivePlugin==null) ? "app" : appfacActivePlugin;
+				opts[1] = _n1;
+				opts[2] = _n2;
+			}else if(opts.length==0){
+				console.log("Please provide all params \"plugin_name|theme_name|component_name\"");
+				return;
+			}
+
+			var pluginDir = opts[0];
+			var theme = opts[1];
+			var css_file = opts[2];
+
+			callback(pluginDir,theme,css_file,appfacConfig);
+		}
+
+		
+	});
+}
+function compComponentOption(args,pluginName,themeName,compName,path,config,configFile,pluginConfig,pluginConfigFile){
+
+	// path = client | admin 
+
+	var jsComponent = 
+`define(function(require, exports, module){
+
+function init(app){
+
+
+}
+
+return init;
+
+});
+
+	`;
+
+
+	var name = compName;
+
+	var defaultFileStructure = jsComponent;
+	var type;
+	var appliedType;
+	if(args.type!=undefined){
+		appliedType = args.type;
+	}else if(args.t!=undefined){
+		appliedType = args.t;
+	}else{
+		if(name.includes(".js")){
+			appliedType = "js";
+		}else if(name.includes(".html")){
+			appliedType = "html";
+		}else{
+			appliedType = "js";
+		}
+		
+	}
+	applyType(appliedType);
+
+
+	var filepath = "plugins/"+pluginName+"/"+path+"/themes/"+themeName+"/components/"+type;
+	var pathExist = process.cwd()+"/"+filepath;
+
+	// check is path exist if not then create
+	//var doesExist = fs.pathExistsSync(pathExist);
+
+	var requireFilePathWithExtension = filepath+"/"+name;
+	var requireFilePathWithOutExtension = filepath+"/"+compName;
+	
+	var location = pathExist+"/"+name;
+
+	if(fs.pathExistsSync(location)){
+		writeToObjects();
+		console.log("Component already exist: "+name);
+		return;
+	}
+
+	fs.ensureDirSync(pathExist);
+
+	if(type=="html"){
+		defaultFileStructure = "";
+	}
+
+	fs.writeFile(location, defaultFileStructure, function(err) {
+	    if(err) {
+	        return console.log(err);
+	    }
+	    if(type=="html")
+	    	writeHTML();
+	    else
+	    	writeToObjects();
+	    
+
+	    console.log("component "+name+" created");
+	}); 
+
+	function writeHTML(){
+		if(pluginConfig['includes']==undefined){
+			pluginConfig['includes'] = {};
+		}
+
+		pluginConfig['includes'][compName] = requireFilePathWithOutExtension;
+		writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
+
+		if(config['includes']==undefined) config['includes'] = {};
+		config['includes'][compName] = requireFilePathWithExtension;
+		writeToFile(configFile,JSON.stringify(config,null,4));
+	}
+
+
+	function writeToObjects(){
+		if(pluginConfig['paths']==undefined){
+			pluginConfig['paths'] = {};
+		}
+
+		pluginConfig['paths'][compName] = requireFilePathWithOutExtension;
+		writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
+
+
+		config['requirejs-config']['paths'][compName] = requireFilePathWithOutExtension;
+		writeToFile(configFile,JSON.stringify(config,null,4));
+	}
+
+
+	function applyType(_type){
+		if(_type=="js"){
+			_apply_js_default_type();
+		}else if(_type=="html"){
+			type = "html";
+			if(!name.includes(".html")) name = name+".html";
+		}else{
+			_apply_js_default_type();
+		}
+		function _apply_js_default_type(){
+			defaultFileStructure = jsComponent;
+			type = "js";
+			if(!name.includes(".js")) name = name+".js";
+		}
+	}
+
+}
+function classComponentOption(pluginName,className,path,config,configFile,pluginConfig,pluginConfigFile){
+	var name = className;
+	var check_name;
+	if(name.includes(".js")){
+		check_name = name;
+	}else{
+		check_name = name+".js";
+	}
+	//check_name = path+"/classes/"+check_name;
+
+	var _checkIfClassExist2 = process.cwd()+"/plugins/"+pluginName+"/"+path+"/classes/";
+	var _checkIfClassExist = process.cwd()+"/plugins/"+pluginName+"/"+path+"/classes/"+check_name;
+
+	var requirePath = "plugins/"+pluginName+"/"+path+"/classes/"+check_name;
+
+	var classComponent = 
+`define(function(require, exports, module){
+
+function ${name}(){
+
+}
+${name}.prototype = {
+
+};
+
+
+return ${name};
+
+});
+
+`;
+
+	
+	var defaultFileStructure = classComponent;
+
+	fs.ensureDirSync(_checkIfClassExist2);
+
+	if(fs.pathExistsSync(_checkIfClassExist)){
+		writeToObjects();
+		console.log("Class already exist: "+name);
+		return;
+	}
+
+	fs.writeFile(_checkIfClassExist, defaultFileStructure, function(err) {
+	    if(err) {
+	        return console.log(err);
+	    }
+
+		for(var prop in pluginConfig['paths']){
+			if(prop == name){
+				writeToObjects();
+				console.log("path exist for: "+ name);
+				return;
+			}
+		}
+
+		writeToObjects();
+
+	    console.log("class "+name+" created");
+	}); 
+
+
+	function writeToObjects(){
+
+		if(pluginConfig['paths']==undefined){
+			pluginConfig['paths'] = {};
+		}
+
+		pluginConfig['paths'][name] = requirePath.split('.').slice(0, -1).join('.');
+		writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
+
+		config['requirejs-config']['paths'][name] = requirePath.split('.').slice(0, -1).join('.');
+		writeToFile(configFile,JSON.stringify(config,null,4));
+
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function  Me(args) {
 
 
 // 

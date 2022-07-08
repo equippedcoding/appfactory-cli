@@ -9,20 +9,6 @@ const https = require('https');
 const prompt = require('prompts');
 const extract = require('extract-zip');
 
-
-/*
-const ghdownload = require('github-download'); 
-const exec = require('exec');
-const ncp = require('ncp').ncp;
-const fs2 = require('fs-extra');
-const admZip = require('adm-zip');
-const appUtils = require('../utils/app.js');
-const prompt = require('prompts');
-const generalSupport = require('./support/general_support')();
-var pluginInit = require('./support/file_creator')();
-var pluginManager = require('./plugin');
-*/
-
 /*
 // https://stackoverflow.com/questions/45395369/how-to-get-console-log-line-numbers-shown-in-nodejs
 var log = console.log;
@@ -54,7 +40,10 @@ function creatApp(args){
 	spinner.stop();
 }
 function download3(foldername,args){
-	child_process.execSync(`cd ${process.cwd()}; git clone https://equippedcoding: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@github.com/equippedcoding/appfactoryjs.git ${foldername}`);
+	const token = args.token;
+	const username = "equippedcoding";
+	const repo = "github.com/equippedcoding/appfactoryjs.git";
+	child_process.execSync(`cd ${process.cwd()}; git clone https://${username}:${token}@${repo} ${foldername}`);
 }
 function directoryExist(newDir,args){
 	let interval;

@@ -8,6 +8,7 @@ const error = import('./utils/error.js');
 import { Run } from './cmds/version.js';
 import { Help } from './cmds/help.js';
 import { Creator } from './cmds/create.js';
+import { Add } from './cmds/add.js';
 
 
 // /usr/local/lib/node_modules/@equippedcoding/
@@ -34,7 +35,6 @@ import { Creator } from './cmds/create.js';
 		case 'dev':
 			require('./cmds/dev')(args);
 			break;
-
 		case 'create':
 			//require('./cmds/create')(args);
 			Creator(args);
@@ -60,7 +60,8 @@ import { Creator } from './cmds/create.js';
 			require('./cmds/update')(args);
 			break;
 		case 'add':
-			require('./cmds/add')(args);
+			//require('./cmds/add')(args);
+			Add(args);
 			break;
 		case 'build':
 			require('./cmds/build')(args);

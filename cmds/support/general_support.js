@@ -33,12 +33,115 @@ export function readFile(file,callback){
         console.log(e);
         console.log(false);
   }
-
 };
+export function checkIfValid(_chars,exceptions,letterOnly){
+
+  var special_chars = [
+   // lowercase
+   "a","b","c","d","e","f","g","h","i","j","k","l"
+  ,"m","n","o","p","q","r","s","t","u","v","w","x","y","z"
+  
+  // uppercase
+  ,"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"
+  ,"R","S","T","U","V","W","X","Y","Z"
+  
+  
+  
+  // special characters
+  //,"_",".","-"
+  ];
+  
+  var special_num = ["1","2","3","4","5","6","7","8","9","0"];
+    /*
+      if(spacesAllowed==null || spacesAllowed==undefined){
+        spacesAllowed = false;
+      }
+      if(_chars==""){
+        return false; 
+      }
+      if(!spacesAllowed){
+        if(_chars.includes(" ")){
+         return false;
+        }
+      }else{
+        special_chars.push(" ");
+      }
+      */
+  
+      if(_chars==""){
+        return false;
+      }
+  
+      if(letterOnly==null || letterOnly==undefined || letterOnly==false){
+        special_chars = special_chars.concat(special_num);
+      }
+  
+      if(exceptions!=null && exceptions!=undefined && Array.isArray(exceptions)){
+        special_chars = special_chars.concat(exceptions);
+      }
+  
+      var isvalid = true;
+  
+      var chars = _chars.split("");
+      for(var i=0; i<chars.length; i++){
+        for(var n=0; n<special_chars.length; n++){
+          var matches = false;
+          if(chars[i]==special_chars[n]){
+            matches = true;
+          }
+          if(matches){
+            break;
+          }
+          if((n+1)==special_chars.length){
+            isvalid = false;
+          }
+        }
+      }
+      return isvalid;
+};
+// https://gist.github.com/mikesmullin/008721d4753d3e0d9a95cda617874736
+export function trace(s) {
+	const orig = Error.prepareStackTrace;
+	Error.prepareStackTrace = (_, stack) => stack;
+	const err = new Error();
+	Error.captureStackTrace(err, global);
+	const callee = err.stack[1];
+	Error.prepareStackTrace = orig;
+  
+	var callerFile = path.relative(process.cwd(), callee.getFileName());
+	var callerLine = callee.getLineNumber();
+  
+	var _paths = callerFile.split("/");
+	callerFile = _paths[_paths.length-1];
+  
+  
+  
+	  //process.stdout.write(`${path.relative(process.cwd(), Error.prototype.stack[0].getFileName())}:${callee.getLineNumber()}: ${s}\n`);
+  
+	  process.stdout.write(`${callerFile}-${callerLine}: ${s} \n\r`);
+}
+
+export function writeToFile(file,content){
+	var writeStream = fs.createWriteStream(file);
+	writeStream.write(content);
+	writeStream.end();
+}
 
 
 
-export default function(args) {  
+
+
+
+
+
+
+
+
+
+
+
+
+//export function (args) {  
 
 var ProcessDirectory = undefined;
 
@@ -47,27 +150,7 @@ function GetExecutionDirectory(){
 }
 
 
-// https://gist.github.com/mikesmullin/008721d4753d3e0d9a95cda617874736
-function trace(s) {
-  const orig = Error.prepareStackTrace;
-  Error.prepareStackTrace = (_, stack) => stack;
-  const err = new Error();
-  Error.captureStackTrace(err, global);
-  const callee = err.stack[1];
-  Error.prepareStackTrace = orig;
 
-  var callerFile = path.relative(process.cwd(), callee.getFileName());
-  var callerLine = callee.getLineNumber();
-
-  var _paths = callerFile.split("/");
-  callerFile = _paths[_paths.length-1];
-
-
-
-    //process.stdout.write(`${path.relative(process.cwd(), Error.prototype.stack[0].getFileName())}:${callee.getLineNumber()}: ${s}\n`);
-
-    process.stdout.write(`${callerFile}-${callerLine}: ${s} \n\r`);
-}
 
 function getAppfactoryProjectFromGit(){
 
@@ -182,11 +265,7 @@ function mergeIndexes(indexes){
   return allIndexes;
 }
 
-function writeToFile(file,content){
-	var writeStream = fs.createWriteStream(file);
-	writeStream.write(content);
-	writeStream.end();
-}
+
 
 function getDateTime() {
 
@@ -260,71 +339,7 @@ function Utils_randomGenerator(len,specialChars,letterOnly){
 
 
 
-function checkIfValid(_chars,exceptions,letterOnly){
 
-var special_chars = [
- // lowercase
- "a","b","c","d","e","f","g","h","i","j","k","l"
-,"m","n","o","p","q","r","s","t","u","v","w","x","y","z"
-
-// uppercase
-,"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"
-,"R","S","T","U","V","W","X","Y","Z"
-
-
-
-// special characters
-//,"_",".","-"
-];
-
-var special_num = ["1","2","3","4","5","6","7","8","9","0"];
-	/*
-    if(spacesAllowed==null || spacesAllowed==undefined){
-      spacesAllowed = false;
-    }
-    if(_chars==""){
-      return false; 
-    }
-    if(!spacesAllowed){
-      if(_chars.includes(" ")){
-       return false;
-      }
-    }else{
-      special_chars.push(" ");
-    }
-    */
-
-    if(_chars==""){
-    	return false;
-    }
-
-    if(letterOnly==null || letterOnly==undefined || letterOnly==false){
-    	special_chars = special_chars.concat(special_num);
-    }
-
-    if(exceptions!=null && exceptions!=undefined && Array.isArray(exceptions)){
-    	special_chars = special_chars.concat(exceptions);
-    }
-
-    var isvalid = true;
-
-    var chars = _chars.split("");
-    for(var i=0; i<chars.length; i++){
-      for(var n=0; n<special_chars.length; n++){
-        var matches = false;
-        if(chars[i]==special_chars[n]){
-          matches = true;
-        }
-        if(matches){
-          break;
-        }
-        if((n+1)==special_chars.length){
-          isvalid = false;
-        }
-      }
-    }
-    return isvalid;
-}
 
 // https://stackoverflow.com/questions/41462606/get-all-files-recursively-in-directories-nodejs
 function runAddComponent(){
@@ -401,7 +416,7 @@ function getAppfacConfigFile(param,callback){
 
 
 
-
+/*
 
 return {
     mainConfigFile: "main.config.json",
@@ -416,10 +431,11 @@ return {
     ProcessDirectory: ProcessDirectory,
     GetExecutionDirectory: GetExecutionDirectory
 }
+*/
 
 
 
 
-};
+//};
 
 
