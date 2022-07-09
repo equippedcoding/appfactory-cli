@@ -3,14 +3,15 @@ const require = createRequire(import.meta.url);
 
 
 const { version } = require('../package.json');
-import { readFile } from './support/general_support.js';
+import { GeneralSupport } from './support/general_support.js';
+const generalSupport = new GeneralSupport();
 const fs = require('fs');
 
 export function Run(args) {
 
 	var mainConfigFile = process.cwd()+"/main.config.json";
 	if(fs.existsSync(mainConfigFile)){
-		readFile(mainConfigFile,function(contents){
+		generalSupport.readFile(mainConfigFile,function(contents){
 			var config = JSON.parse(contents);
 			if(config['version']!=undefined){
 				console.log(`CLI client   v${version}`);

@@ -3,8 +3,10 @@ const require = createRequire(import.meta.url);
 
 import('../utils/polyfills.js');
 const fs = require('fs-extra');
-import {readFile, checkIfValid, writeToFile} from './support/general_support.js';
 
+import { GeneralSupport } from './support/general_support.js';
+
+const generalSupport = new GeneralSupport();
 const mainConfigFile = "main.config.json";
 /*
 const ora = require('ora');
@@ -90,7 +92,7 @@ function createNewClass(args){
 		}
 
 		// check that component has no spaces and any special characters except _
-		var isNameValid = checkIfValid(className,["_","-"," ",".","/","(",")","[","]","+","=","*","*","%","$","#","@","!","|","\\"]);
+		var isNameValid = generalSupport.checkIfValid(className,["_","-"," ",".","/","(",")","[","]","+","=","*","*","%","$","#","@","!","|","\\"]);
 		if(!isNameValid){
 			console.log("Please provide a valid class name");
 			return;
@@ -98,9 +100,9 @@ function createNewClass(args){
 		
 		var configFile = process.cwd()+"/"+mainConfigFile;
 		var pluginConfigFile = process.cwd()+"/plugins/"+pluginName+"/plugin.config.json";
-		readFile(configFile,function(content){
+		generalSupport.readFile(configFile,function(content){
 			var config = JSON.parse(content);
-			readFile(pluginConfigFile,function(content2){
+			generalSupport.readFile(pluginConfigFile,function(content2){
 				var pluginConfig = JSON.parse(content2);
 				classComponentOption(pluginName,className,path,config,configFile,pluginConfig,pluginConfigFile);
 			});
@@ -134,7 +136,7 @@ function configureComponent(args){
 		}
 
 		// check that component has no spaces and any special characters except _
-		var isNameValid = checkIfValid(compName,["_","-"]);
+		var isNameValid = generalSupport.checkIfValid(compName,["_","-"]);
 		if(!isNameValid){
 			console.log("Please provide a valid component name");
 			return;
@@ -142,10 +144,10 @@ function configureComponent(args){
 
 		var configFile = process.cwd()+"/"+mainConfigFile;
 		var pluginConfigFile = process.cwd()+"/plugins/"+pluginName+"/plugin.config.json";
-		readFile(configFile,function(content){
+		generalSupport.readFile(configFile,function(content){
 			var config = JSON.parse(content);
 
-			readFile(pluginConfigFile,function(content2){
+			generalSupport.readFile(pluginConfigFile,function(content2){
 				var pluginConfig = JSON.parse(content2);
 
 				compComponentOption(args,pluginName,themeName,compName,path,config,configFile,pluginConfig,pluginConfigFile);
@@ -156,7 +158,7 @@ function configureComponent(args){
 }
 function getAppfacConfigFile(args,type,param,callback){
 	var _config_file = process.cwd()+"/"+mainConfigFile;
-	readFile(_config_file,function(content){
+	generalSupport.readFile(_config_file,function(content){
 		var appfacConfig = JSON.parse(content);
 		var appfacActiveTheme = null;
 		var appfacActivePlugin = null;
@@ -323,11 +325,11 @@ return init;
 		}
 
 		pluginConfig['includes'][compName] = requireFilePathWithOutExtension;
-		writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
+		generalSupport.writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
 
 		if(config['includes']==undefined) config['includes'] = {};
 		config['includes'][compName] = requireFilePathWithExtension;
-		writeToFile(configFile,JSON.stringify(config,null,4));
+		generalSupport.writeToFile(configFile,JSON.stringify(config,null,4));
 	}
 
 
@@ -337,11 +339,11 @@ return init;
 		}
 
 		pluginConfig['paths'][compName] = requireFilePathWithOutExtension;
-		writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
+		generalSupport.writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
 
 
 		config['requirejs-config']['paths'][compName] = requireFilePathWithOutExtension;
-		writeToFile(configFile,JSON.stringify(config,null,4));
+		generalSupport.writeToFile(configFile,JSON.stringify(config,null,4));
 	}
 
 
@@ -431,10 +433,10 @@ return ${name};
 		}
 
 		pluginConfig['paths'][name] = requirePath.split('.').slice(0, -1).join('.');
-		writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
+		generalSupport.writeToFile(pluginConfigFile,JSON.stringify(pluginConfig,null,4));
 
 		config['requirejs-config']['paths'][name] = requirePath.split('.').slice(0, -1).join('.');
-		writeToFile(configFile,JSON.stringify(config,null,4));
+		generalSupport.writeToFile(configFile,JSON.stringify(config,null,4));
 
 	}
 }

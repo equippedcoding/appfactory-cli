@@ -3,11 +3,12 @@ const require = createRequire(import.meta.url);
 
 import ora from 'ora';
 import child_process from 'child_process';
-//import { setTimeout } from 'timers/promises';
 const fs = require('fs');
 const https = require('https');
 const prompt = require('prompts');
 const extract = require('extract-zip');
+
+import { PluginSupport } from './plugin.js';
 
 /*
 // https://stackoverflow.com/questions/45395369/how-to-get-console-log-line-numbers-shown-in-nodejs
@@ -110,13 +111,14 @@ function configureConfigFile(foldername,appTitle){
 		writeStream.write(configString);
 		writeStream.end();
 		process.chdir(process.cwd()+"/"+foldername);
+		PluginSupport({r:true}, function(appfacConfig){}, foldername);
 		//pluginManager( {r:true}, function(appfacConfig){}, newDir);
 		////handleHTMLFile(config['index-config']);
 	});
 }
 
 
-
+ 
 /*
 function getRepoUrl(){
     var owner = "equippedcoding";
@@ -176,6 +178,31 @@ function deleteFile(source){
 	},1000);
 }
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

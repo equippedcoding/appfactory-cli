@@ -1,5 +1,8 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
-const ora = require('ora');
+import ora from 'ora';
+
 const ghdownload = require('github-download'); 
 const exec = require('exec');
 // const request = require('superagent');
@@ -8,9 +11,8 @@ const ncp = require('ncp').ncp;
 const fse = require('fs-extra');
 
 const AdmZip = require('adm-zip');
-const appUtils = require('../utils/app.js');
+//const appUtils = require('../utils/app.js'); 
 
-var formidable = require('formidable'); 
 
 const prompt = require('prompts');
 
@@ -19,9 +21,14 @@ var archiver = require('archiver');
 var ip = require('ip');
 const _eval = require('eval');
 const strip = require('strip-comments');
-var loginSupport = require('./support/login_support')();
-var generalSupport = require('./support/general_support')();
-var pluginInit = require('./support/file_creator')();
+//var loginSupport = require('./support/login_support')();
+//var generalSupport = require('./support/general_support')();
+import { GeneralSupport } from './support/general_support.js';
+const generalSupport = new GeneralSupport();
+
+//var pluginInit = require('./support/file_creator')();
+import { FileCreator } from './support/file_creator.js';
+const pluginInit = new FileCreator();
 
 var pathModule = require('path');
 
@@ -30,9 +37,11 @@ var ftp = require("basic-ftp");
 var Hjson = require('hjson');
 
 
-var mainConfigFile = generalSupport.mainConfigFile;
+var mainConfigFile = "main.config.json"; 
 
-module.exports = async (args,gl_callback) => {
+
+//pluginManager( {r:true}, function(appfacConfig){}, newDir);
+export async function PluginSupport(args,gl_callback) {
 
 var currentDir = process.cwd()+"/.it";
 var isInRootDir = fse.pathExistsSync(currentDir);
@@ -153,7 +162,6 @@ function restorePlugin(whichPlugin,appfacConfig){
 	else
 		gl_restore = args.r;
 
-	
 	var appfacConfigFile = process.cwd() + "/" + mainConfigFile;
 	getPluginConfigFiles(function(pluginConfigs){
 		//generalSupport.trace(2);
@@ -180,7 +188,7 @@ function updateRestore(pluginConfigs,appfacConfig,appfacConfigFile){
 
 	var other = appfacConfig["requirejs-config"]["paths"];
 	appfacConfig["requirejs-config"]["paths"] = {};
-	for(prop in appfacConfig["requirejs-config"]["libs"]){
+	for(var prop in appfacConfig["requirejs-config"]["libs"]){
 		appfacConfig["requirejs-config"]["paths"][prop] = appfacConfig["requirejs-config"]["libs"][prop];
 	}
 	for(prop in other){
@@ -1395,23 +1403,18 @@ function getFilesToUpload(callback){
 
   return true;
 
-}
+}// end module
 
 
 
 
 
-
-
-
-
-
-return;
 
 
 
 /* login */
 
+/*
 // upload plugin for public use
 var upload = "";
 if(args.upload!=undefined){
@@ -1419,6 +1422,7 @@ if(args.upload!=undefined){
 }else if(args.n!=undefined){
 	upload = args.u;
 }
+
 
 
 // appfactory plugin --theme "" --name "" --start ""
@@ -1471,9 +1475,6 @@ if(args['restore-from-delete']!=undefined){
 }
 
 
-/* no login */
-
-
 // Install Plugin
 // --------------
 // appfactory plugin
@@ -1497,7 +1498,7 @@ if(args.update!=undefined){
 }
 
 
-
+*/
 
 
 function removePlugin(){
@@ -2325,7 +2326,7 @@ function createStartScriptFileName(){
 	return startScript;
 }
 
-
+/*
 
 var addPluginComponent = "";
 if(args.add!=undefined){
@@ -2365,7 +2366,7 @@ if(publishPlugin!=""){
 	publishMyPlugin();
 }
 
-
+*/
 
 // appfactory plugin --add --admin|--client --class false --name componentName --type js|html 
 

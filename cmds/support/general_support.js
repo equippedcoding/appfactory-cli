@@ -19,213 +19,214 @@ var path = require('path');
 */
 
 
-export function readFile(file,callback){
-  try{
-    fs.readFile(file, 'utf8', function(err, content) {
-    if(err){
-        console.log(err);
-        callback(false);
-        return;
-    }
-        callback(content);
-    });
-  }catch(e){
-        console.log(e);
-        console.log(false);
-  }
-};
-export function checkIfValid(_chars,exceptions,letterOnly){
+function GeneralSupport(){
 
-  var special_chars = [
-   // lowercase
-   "a","b","c","d","e","f","g","h","i","j","k","l"
-  ,"m","n","o","p","q","r","s","t","u","v","w","x","y","z"
-  
-  // uppercase
-  ,"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"
-  ,"R","S","T","U","V","W","X","Y","Z"
-  
-  
-  
-  // special characters
-  //,"_",".","-"
-  ];
-  
-  var special_num = ["1","2","3","4","5","6","7","8","9","0"];
-    /*
-      if(spacesAllowed==null || spacesAllowed==undefined){
-        spacesAllowed = false;
-      }
-      if(_chars==""){
-        return false; 
-      }
-      if(!spacesAllowed){
-        if(_chars.includes(" ")){
-         return false;
-        }
-      }else{
-        special_chars.push(" ");
-      }
-      */
-  
-      if(_chars==""){
-        return false;
-      }
-  
-      if(letterOnly==null || letterOnly==undefined || letterOnly==false){
-        special_chars = special_chars.concat(special_num);
-      }
-  
-      if(exceptions!=null && exceptions!=undefined && Array.isArray(exceptions)){
-        special_chars = special_chars.concat(exceptions);
-      }
-  
-      var isvalid = true;
-  
-      var chars = _chars.split("");
-      for(var i=0; i<chars.length; i++){
-        for(var n=0; n<special_chars.length; n++){
-          var matches = false;
-          if(chars[i]==special_chars[n]){
-            matches = true;
-          }
-          if(matches){
-            break;
-          }
-          if((n+1)==special_chars.length){
-            isvalid = false;
-          }
-        }
-      }
-      return isvalid;
-};
-// https://gist.github.com/mikesmullin/008721d4753d3e0d9a95cda617874736
-export function trace(s) {
-	const orig = Error.prepareStackTrace;
-	Error.prepareStackTrace = (_, stack) => stack;
-	const err = new Error();
-	Error.captureStackTrace(err, global);
-	const callee = err.stack[1];
-	Error.prepareStackTrace = orig;
-  
-	var callerFile = path.relative(process.cwd(), callee.getFileName());
-	var callerLine = callee.getLineNumber();
-  
-	var _paths = callerFile.split("/");
-	callerFile = _paths[_paths.length-1];
-  
-  
-  
-	  //process.stdout.write(`${path.relative(process.cwd(), Error.prototype.stack[0].getFileName())}:${callee.getLineNumber()}: ${s}\n`);
-  
-	  process.stdout.write(`${callerFile}-${callerLine}: ${s} \n\r`);
 }
 
-export function writeToFile(file,content){
-	var writeStream = fs.createWriteStream(file);
-	writeStream.write(content);
-	writeStream.end();
-}
+GeneralSupport.prototype = {
+
+	readFile: function(file,callback){
+		try{
+		  fs.readFile(file, 'utf8', function(err, content) {
+		  if(err){
+			  console.log(err);
+			  callback(false);
+			  return;
+		  }
+			  callback(content);
+		  });
+		}catch(e){
+			  console.log(e);
+			  console.log(false);
+		}
+	},
+	checkIfValid: function(_chars,exceptions,letterOnly){
+
+		var special_chars = [
+		 // lowercase
+		 "a","b","c","d","e","f","g","h","i","j","k","l"
+		,"m","n","o","p","q","r","s","t","u","v","w","x","y","z"
+		// uppercase
+		,"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"
+		,"R","S","T","U","V","W","X","Y","Z"
+		// special characters
+		//,"_",".","-"
+		];
+		
+		var special_num = ["1","2","3","4","5","6","7","8","9","0"];
+		  /*
+			if(spacesAllowed==null || spacesAllowed==undefined){
+			  spacesAllowed = false;
+			}
+			if(_chars==""){
+			  return false; 
+			}
+			if(!spacesAllowed){
+			  if(_chars.includes(" ")){
+			   return false;
+			  }
+			}else{
+			  special_chars.push(" ");
+			}
+			*/
+		
+		if(_chars==""){
+			return false;
+		}
+	
+		if(letterOnly==null || letterOnly==undefined || letterOnly==false){
+			special_chars = special_chars.concat(special_num);
+		}
+	
+		if(exceptions!=null && exceptions!=undefined && Array.isArray(exceptions)){
+			special_chars = special_chars.concat(exceptions);
+		}
+	
+		var isvalid = true;
+	
+		var chars = _chars.split("");
+		for(var i=0; i<chars.length; i++){
+			for(var n=0; n<special_chars.length; n++){
+			var matches = false;
+			if(chars[i]==special_chars[n]){
+				matches = true;
+			}
+			if(matches){
+				break;
+			}
+			if((n+1)==special_chars.length){
+				isvalid = false;
+			}
+			}
+		}
+		return isvalid;
+	},
+	
+	trace: function(s) {
+		// https://gist.github.com/mikesmullin/008721d4753d3e0d9a95cda617874736
+		const orig = Error.prepareStackTrace;
+		Error.prepareStackTrace = (_, stack) => stack;
+		const err = new Error();
+		Error.captureStackTrace(err, global);
+		const callee = err.stack[1];
+		Error.prepareStackTrace = orig;
+	  
+		var callerFile = path.relative(process.cwd(), callee.getFileName());
+		var callerLine = callee.getLineNumber();
+	  
+		var _paths = callerFile.split("/");
+		callerFile = _paths[_paths.length-1];
+	  
+	  
+	  
+		  //process.stdout.write(`${path.relative(process.cwd(), Error.prototype.stack[0].getFileName())}:${callee.getLineNumber()}: ${s}\n`);
+	  
+		  process.stdout.write(`${callerFile}-${callerLine}: ${s} \n\r`);
+	},
+
+	writeToFile: function(file,content){
+		var writeStream = fs.createWriteStream(file);
+		writeStream.write(content);
+		writeStream.end();
+	},
+
+	GetExecutionDirectory: function(){
+		return process.cwd();//(ProcessDirectory==undefined) ? process.cwd() : process.cwd()+"/"+ProcessDirectory;;
+	},
+
+	replace_link: function(path,str){
+		var extractedString = str.match('\{(.*?)\}');
+		if(extractedString!=null && extractedString!=undefined && extractedString.length>0){
+		  var replacementString = path+extractedString[1];
+		  return str.replace(/\{.*?\}/, replacementString);
+		}else{
+		  return str;
+		}
+	},
+	getDateTime: function() {
+
+		var date = new Date();
+	
+		var hour = date.getHours();
+		hour = (hour < 10 ? "0" : "") + hour;
+	
+		var min  = date.getMinutes();
+		min = (min < 10 ? "0" : "") + min;
+	
+		var sec  = date.getSeconds();
+		sec = (sec < 10 ? "0" : "") + sec;
+	
+		var year = date.getFullYear();
+	
+		var month = date.getMonth() + 1;
+		month = (month < 10 ? "0" : "") + month;
+	
+		var day  = date.getDate();
+		day = (day < 10 ? "0" : "") + day;
+	
+		return year + ":" + month + ":" + day + ":" + hour + ":" + min + ":" + sec;
+	
+	},
+
+	random: function(len,specialChars,letterOnly){ 
+		return this.randomGenerator(len,specialChars,letterOnly); 
+	},
+
+	randomGenerator: function(len,specialChars,letterOnly){
+		var text = "";
+		var possible = null;
+	
+		if(letterOnly==undefined || letterOnly==null){
+			if(letterOnly){
+				text = y();
+			}else{
+				text = x();
+			}
+		}else{
+			text = x();
+		}
+	
+		function x(){
+			var text1 = "";
+			if(specialChars==null || specialChars== undefined || specialChars==false)
+				possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+			else
+				possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+!#*^_";
+	
+			if(len==null || len==undefined) len = 5;
+	
+			for( var i=0; i < len; i++ )
+			   text1 += possible.charAt(Math.floor(Math.random() * possible.length));
+			return text1;
+		}
+		function y(){
+			var text1 = "";
+			if(specialChars==null || specialChars== undefined || specialChars==false)
+				possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+			else
+				possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0=+!#*^_";
+	
+			if(len==null || len==undefined) len = 5;
+	
+			for( var i=0; i < len; i++ )
+			   text1 += possible.charAt(Math.floor(Math.random() * possible.length));
+			return text1;
+		}
+	
+	
+		return text;
+	}
 
 
 
+};
 
 
+export { GeneralSupport };
 
 
-
-
-
-
-
-
-
-
-//export function (args) {  
-
+/*
 var ProcessDirectory = undefined;
-
-function GetExecutionDirectory(){
-  return (ProcessDirectory==undefined) ? process.cwd() : process.cwd()+"/"+ProcessDirectory;;
-}
-
-
-
-
-function getAppfactoryProjectFromGit(){
-
-    // TODO: change to where your zip file is located
-    const repoName = 'node-zip-download-sample';
-    const href = `https://nodeload.github.com/equippedcoding/appfactoryjs/zip/master`;
-    const zipFile = 'master.zip';
-
-    const source = `${href}`;
-
-    request
-    .get(source)
-    .on('error', function(error) {
-    console.log(error);
-    })
-    .pipe(fs.createWriteStream(zipFile))
-    .on('finish', function() {
-
-
-
-        // TODO: change to the directory instead of the zip that you want to extract
-        const extractEntryTo = `${repoName}-master/`;
-
-        ///////////////////////////////////////////////////////////////
-        var zip = new admZip(zipFile);
-        var zipEntries = zip.getEntries(); // an array of ZipEntry records
-
-        var dirName = zipEntries[0].entryName;
-        zip.extractAllTo(dirName, outputDir, true);
-
-        setTimeout(function(){
-            fs2.moveSync(dirName+"/"+dirName, process.cwd()+"/"+newDir, { overwrite: true });
-            fs2.removeSync(dirName);
-            fs2.removeSync(zipFile);
-
-            var appfacConfig = process.cwd()+"/"+newDir+"/config.appfac.js";
-
-            fs.readFile(appfacConfig, 'utf8', function(err, configFile) {
-                if(err) console.log(err);
-                var config = JSON.parse(configFile);
-                config['requirejs-config'];
-                //config['index-config'].title = appTitle;
-                config['indexes']['index'].title = appTitle;
-
-                /*
-                var x = {
-                "index-config": config['index-config'],
-                "requirejs-config": config['requirejs-config']
-                }
-                */
-
-                //var x2 = JSON.stringify(x, null, 4);
-                var x2 = JSON.stringify(config, null, 4);
-                var writeStream = fs.createWriteStream(appfacConfig);
-                writeStream.write(x2);
-                writeStream.end();
-
-                //handleHTMLFile(config['index-config']);
-
-            });
-        },3000);
-
-    });
-
-}
-
-function replace_link(path,str){
-  var extractedString = str.match('\{(.*?)\}');
-  if(extractedString!=null && extractedString!=undefined && extractedString.length>0){
-    var replacementString = path+extractedString[1];
-    return str.replace(/\{.*?\}/, replacementString);
-  }else{
-    return str;
-  }
-}
 function mergeIndexes(indexes){
 
   var allIndex = {};
@@ -264,83 +265,6 @@ function mergeIndexes(indexes){
 
   return allIndexes;
 }
-
-
-
-function getDateTime() {
-
-    var date = new Date();
-
-    var hour = date.getHours();
-    hour = (hour < 10 ? "0" : "") + hour;
-
-    var min  = date.getMinutes();
-    min = (min < 10 ? "0" : "") + min;
-
-    var sec  = date.getSeconds();
-    sec = (sec < 10 ? "0" : "") + sec;
-
-    var year = date.getFullYear();
-
-    var month = date.getMonth() + 1;
-    month = (month < 10 ? "0" : "") + month;
-
-    var day  = date.getDate();
-    day = (day < 10 ? "0" : "") + day;
-
-    return year + ":" + month + ":" + day + ":" + hour + ":" + min + ":" + sec;
-
-}
-
-function Utils_randomGenerator(len,specialChars,letterOnly){
-	var text = "";
-	var possible = null;
-
-	if(letterOnly==undefined || letterOnly==null){
-		if(letterOnly){
-			text = y();
-		}else{
-			text = x();
-		}
-	}else{
-		text = x();
-	}
-
-	function x(){
-		var text1 = "";
-		if(specialChars==null || specialChars== undefined || specialChars==false)
-			possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-		else
-			possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+!#*^_";
-
-		if(len==null || len==undefined) len = 5;
-
-		for( var i=0; i < len; i++ )
-		   text1 += possible.charAt(Math.floor(Math.random() * possible.length));
-		return text1;
-	}
-	function y(){
-		var text1 = "";
-		if(specialChars==null || specialChars== undefined || specialChars==false)
-			possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-		else
-			possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0=+!#*^_";
-
-		if(len==null || len==undefined) len = 5;
-
-		for( var i=0; i < len; i++ )
-		   text1 += possible.charAt(Math.floor(Math.random() * possible.length));
-		return text1;
-	}
-
-
-	return text;
-}
-
-
-
-
-
 // https://stackoverflow.com/questions/41462606/get-all-files-recursively-in-directories-nodejs
 function runAddComponent(){
     var path = "client";
@@ -354,9 +278,6 @@ function runAddComponent(){
 
 
     });
-
-
-
 }
 function getAppfacConfigFile(param,callback){
     var _config_file = process.cwd()+"/config.appfac.js";
@@ -412,30 +333,10 @@ function getAppfacConfigFile(param,callback){
     });
   }
 
-
-
-
-
-/*
-
-return {
-    mainConfigFile: "main.config.json",
-    mergeIndexes: mergeIndexes,
-	checkIfValid: checkIfValid,
-	writeToFile: writeToFile,
-	readFile: readFile,
-	getDateTime: getDateTime,
-	random: Utils_randomGenerator,
-    getAppfactoryProjectFromGit: getAppfactoryProjectFromGit,
-    trace: trace,
-    ProcessDirectory: ProcessDirectory,
-    GetExecutionDirectory: GetExecutionDirectory
-}
 */
 
 
 
 
-//};
 
 
